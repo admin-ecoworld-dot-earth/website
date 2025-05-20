@@ -721,6 +721,7 @@ input, select, textarea {
 		height: 6em;
 		left: 0;
 		line-height: 8em;
+		font-size: 0.5em;
 		position: absolute;
 		text-align: center;
 		width: 100%;
