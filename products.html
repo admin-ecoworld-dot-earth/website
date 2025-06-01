@@ -1,0 +1,285 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Products - EcoWorld.earth</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+		<!-- Favicons -->
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+		<link rel="manifest" href="/site.webmanifest">
+		<link rel="icon" type="image/x-icon" href="/favicon.ico">
+	
+		<!-- Main Stylesheets -->
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<style>
+			.main-nav {
+				background: rgba(0, 0, 0, 0.7);
+				padding: 1rem;
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				z-index: 1000;
+			}
+			.main-nav ul {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				justify-content: center;
+				gap: 2rem;
+			}
+			.main-nav a {
+				color: white;
+				text-decoration: none;
+				font-size: 1.1rem;
+				transition: color 0.3s ease;
+			}
+			.main-nav a:hover {
+				color: #4CAF50;
+			}
+			#main {
+				padding-top: 4rem;
+			}
+			.content-section {
+				background: rgba(0, 0, 0, 0.7);
+				padding: 2rem;
+				margin: 2rem auto;
+				max-width: 1000px;
+				border-radius: 8px;
+			}
+			.carousel-container {
+				position: relative;
+				max-width: 800px;
+				margin: 0 auto;
+				background: rgba(0, 0, 0, 0.5);
+				padding: 1rem;
+				border-radius: 8px;
+			}
+			.carousel {
+				position: relative;
+				height: 400px;
+				overflow: hidden;
+				border-radius: 4px;
+			}
+			.carousel-inner {
+				position: relative;
+				height: 100%;
+				transition: transform 0.5s ease;
+			}
+			.carousel-item {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				opacity: 0;
+				transition: opacity 0.5s ease;
+			}
+			.carousel-item.active {
+				opacity: 1;
+			}
+			.carousel-item img {
+				width: 100%;
+				height: 100%;
+				object-fit: contain;
+			}
+			.carousel-control {
+				position: absolute;
+				top: 50%;
+				transform: translateY(-50%);
+				background: rgba(0, 0, 0, 0.5);
+				color: white;
+				border: none;
+				padding: 1rem;
+				cursor: pointer;
+				z-index: 10;
+				transition: background 0.3s ease;
+			}
+			.carousel-control:hover {
+				background: rgba(0, 0, 0, 0.8);
+			}
+			.carousel-control.prev {
+				left: 0;
+				border-radius: 0 4px 4px 0;
+			}
+			.carousel-control.next {
+				right: 0;
+				border-radius: 4px 0 0 4px;
+			}
+			.carousel-indicators {
+				position: absolute;
+				bottom: 10px;
+				left: 50%;
+				transform: translateX(-50%);
+				display: flex;
+				gap: 8px;
+				z-index: 10;
+			}
+			.indicator {
+				width: 30px;
+				height: 30px;
+				background: rgba(0, 0, 0, 0.5);
+				color: white;
+				border: none;
+				border-radius: 50%;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 14px;
+				transition: background 0.3s ease;
+			}
+			.indicator.active {
+				background: #4CAF50;
+			}
+			.product-info {
+				margin-top: 2rem;
+				text-align: center;
+			}
+			.product-info h2 {
+				color: #4CAF50;
+				margin-bottom: 1rem;
+			}
+			.product-info p {
+				margin-bottom: 1rem;
+				line-height: 1.6;
+			}
+			.contact-button {
+				display: inline-block;
+				background: #4CAF50;
+				color: white;
+				padding: 0.8rem 1.5rem;
+				border-radius: 4px;
+				text-decoration: none;
+				transition: background 0.3s ease;
+			}
+			.contact-button:hover {
+				background: #45a049;
+			}
+		</style>
+	</head>
+	<body class="is-preload">
+		<div id="wrapper">
+			<div id="bg"></div>
+			<div id="main">
+				<!-- Navigation -->
+				<nav class="main-nav">
+					<ul>
+						<li><a href="index.html">Home</a></li>
+						<li><a href="about.html">About Us</a></li>
+						<li><a href="products.html">Products</a></li>
+						<li><a href="privacy-policy.html">Privacy Policy</a></li>
+						<li><a href="terms.html">Terms of Service</a></li>
+						<li><a href="contact.html">Contact</a></li>
+					</ul>
+				</nav>
+
+				<!-- Header -->
+				<header id="header">
+					<h1>Our Eco-Friendly Products</h1>
+					<div class="content-section">
+						<div class="carousel-container">
+							<div class="carousel">
+								<div class="carousel-inner">
+									<!-- Carousel items will be added dynamically -->
+								</div>
+								<button class="carousel-control prev">❮</button>
+								<button class="carousel-control next">❯</button>
+								<div class="carousel-indicators">
+									<!-- Indicators will be added dynamically -->
+								</div>
+							</div>
+						</div>
+
+						<div class="product-info">
+							<h2>Custom Solutions Available</h2>
+							<p>Looking for specific eco-friendly packaging solutions?</p>
+							<p>We offer customized products tailored to your business needs.</p>
+						</div>
+					</div>
+				</header>
+
+				<!-- Footer -->
+				<footer id="footer">
+					<span class="copyright">&copy; EcoWorld Earth Products | Design: <a href="http://html5up.net">HTML5 UP</a>.</span>
+				</footer>
+			</div>
+		</div>
+		<script>
+			window.onload = function() { 
+				document.body.classList.remove('is-preload');
+				
+				// Image paths - using the actual image files from product-images folder
+				const images = [
+					'product-images/IMG-20250529-WA0077.jpg',
+					'product-images/IMG-20250529-WA0082.jpg',
+					'product-images/IMG-20250529-WA0083.jpg',
+					'product-images/IMG-20250601-WA0020.jpg',
+					'product-images/IMG-20250601-WA0021.jpg',
+					'product-images/IMG-20250601-WA0022.jpg',
+					'product-images/IMG-20250601-WA0023.jpg',
+					'product-images/IMG-20250601-WA0024.jpg',
+					'product-images/IMG-20250601-WA0025.jpg',
+					'product-images/IMG-20250601-WA0026.jpg',
+					'product-images/IMG-20250601-WA0027.jpg',
+					'product-images/IMG-20250601-WA0028.jpg',
+					'product-images/IMG-20250601-WA0029.jpg',
+					'product-images/IMG-20250601-WA0030.jpg'
+				];
+
+				const carouselInner = document.querySelector('.carousel-inner');
+				const indicatorsContainer = document.querySelector('.carousel-indicators');
+				let currentIndex = 0;
+
+				// Create carousel items and indicators
+				images.forEach((src, index) => {
+					// Create carousel item
+					const item = document.createElement('div');
+					item.className = `carousel-item ${index === 0 ? 'active' : ''}`;
+					item.innerHTML = `<img src="${src}" alt="Product ${index + 1}">`;
+					carouselInner.appendChild(item);
+
+					// Create indicator
+					const indicator = document.createElement('button');
+					indicator.className = `indicator ${index === 0 ? 'active' : ''}`;
+					indicator.textContent = index + 1;
+					indicator.addEventListener('click', () => goToSlide(index));
+					indicatorsContainer.appendChild(indicator);
+				});
+
+				// Navigation functions
+				function goToSlide(index) {
+					document.querySelectorAll('.carousel-item')[currentIndex].classList.remove('active');
+					document.querySelectorAll('.indicator')[currentIndex].classList.remove('active');
+					currentIndex = index;
+					document.querySelectorAll('.carousel-item')[currentIndex].classList.add('active');
+					document.querySelectorAll('.indicator')[currentIndex].classList.add('active');
+				}
+
+				function nextSlide() {
+					const nextIndex = (currentIndex + 1) % images.length;
+					goToSlide(nextIndex);
+				}
+
+				function prevSlide() {
+					const prevIndex = (currentIndex - 1 + images.length) % images.length;
+					goToSlide(prevIndex);
+				}
+
+				// Add event listeners
+				document.querySelector('.carousel-control.next').addEventListener('click', nextSlide);
+				document.querySelector('.carousel-control.prev').addEventListener('click', prevSlide);
+
+				// Auto-advance slides every 5 seconds
+				setInterval(nextSlide, 5000);
+			}
+			window.ontouchmove = function() { return false; }
+			window.onorientationchange = function() { document.body.scrollTop = 0; }
+		</script>
+	</body>
+</html> 
