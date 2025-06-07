@@ -53,7 +53,14 @@
 				color: #4CAF50;
 				background: rgba(255, 255, 255, 0.1);
 			}
-			#main {
+			#wrapper {
+    position: relative;
+    min-height: 100vh;
+    height: auto;
+}
+
+#main {
+                                position: relative;
 				padding-top: 3.5rem;
 				min-height: 100vh;
 				display: flex;
@@ -214,7 +221,6 @@
 		</div>
 		<script>
 			window.onload = function() { document.body.classList.remove('is-preload'); }
-			window.ontouchmove = function() { return false; }
 			window.onorientationchange = function() { document.body.scrollTop = 0; }
 		</script>
 	</body>
