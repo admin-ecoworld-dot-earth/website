@@ -1,7 +1,7 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
-<title>Products - EcoWorld.earth | Sustainable Product Range</title>
+<title>Category - EcoWorld.earth</title>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -27,18 +27,13 @@
 </nav>
 
 <!-- Breadcrumb -->
-<div class="breadcrumb" style="padding-top:5rem;">
-  <a href="index.html">Home</a><span class="sep">/</span><span>Products</span>
-</div>
+<div class="breadcrumb" style="padding-top:5rem;" id="breadcrumb"></div>
 
 <!-- Page Header -->
-<div class="page-header">
-  <h1>Our Sustainable Product Range</h1>
-  <p>EcoWorld offers a wide range of paper-based, biodegradable, and natural material products designed to replace single-use plastic across food, retail, and daily use.</p>
-</div>
+<div class="page-header" id="pageHeader"></div>
 
-<!-- Category Cards Grid -->
-<div class="card-grid" id="categoryGrid"></div>
+<!-- Sub-Category Cards Grid -->
+<div class="card-grid" id="subcategoryGrid"></div>
 
 <!-- Info Bar -->
 <div class="info-bar">
@@ -62,29 +57,51 @@
 
 <script src="assets/js/products-data.js"></script>
 <script>
-  // Render category cards
-  const grid = document.getElementById('categoryGrid');
-  CATALOG.forEach(cat => {
-    const totalProducts = cat.subcategories.reduce((sum, sub) => sum + sub.products.length, 0);
-    grid.innerHTML += `
-      <a href="category.html?cat=${cat.id}" class="card">
-        <div class="card-image">
-          ${cat.image ? `<img src="${cat.image}" alt="${cat.name}">` : `<i class="${cat.icon} placeholder-icon"></i>`}
-        </div>
-        <div class="card-body">
-          <h3>${cat.name}</h3>
-          <p>${cat.description}</p>
-          <div class="card-meta">
-            <span class="product-count">${cat.subcategories.length} sub-categories</span>
-            &middot; <span class="product-count">${totalProducts} products</span>
-          </div>
-        </div>
-        <div class="card-footer">
-          <span class="card-link">Explore Category <i class="fas fa-arrow-right"></i></span>
-        </div>
-      </a>
+  const params = new URLSearchParams(window.location.search);
+  const catId = params.get('cat');
+  const category = getCategoryById(catId);
+
+  if (!category) {
+    window.location.href = 'products.html';
+  } else {
+    // Update page title
+    document.title = `${category.name} - EcoWorld.earth`;
+
+    // Breadcrumb
+    document.getElementById('breadcrumb').innerHTML = `
+      <a href="index.html">Home</a><span class="sep">/</span>
+      <a href="products.html">Products</a><span class="sep">/</span>
+      <span>${category.name}</span>
     `;
-  });
+
+    // Page Header
+    document.getElementById('pageHeader').innerHTML = `
+      <h1><i class="${category.icon}" style="color:#43a047;margin-right:0.5rem;"></i>${category.name}</h1>
+      <p>${category.description}</p>
+    `;
+
+    // Sub-category cards
+    const grid = document.getElementById('subcategoryGrid');
+    category.subcategories.forEach(sub => {
+      grid.innerHTML += `
+        <a href="subcategory.html?cat=${catId}&sub=${sub.id}" class="card">
+          <div class="card-image">
+            ${sub.image ? `<img src="${sub.image}" alt="${sub.name}">` : `<i class="${category.icon} placeholder-icon"></i>`}
+          </div>
+          <div class="card-body">
+            <h3>${sub.name}</h3>
+            <p>${sub.description}</p>
+            <div class="card-meta">
+              <span class="product-count">${sub.products.length} product${sub.products.length > 1 ? 's' : ''}</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="card-link">View Products <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </a>
+      `;
+    });
+  }
   updateNavCartBadge();
 </script>
 </body>

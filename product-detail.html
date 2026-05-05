@@ -1,0 +1,325 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Product - EcoWorld.earth</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="stylesheet" href="assets/css/fontawesome-all.min.css" />
+<link rel="stylesheet" href="assets/css/marketplace.css" />
+<style>
+  .product-detail { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem; }
+  .product-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+
+  /* Image Section */
+  .product-image-section {
+    background: #fff; border-radius: 14px; border: 1px solid #e8f5e9;
+    overflow: hidden; position: sticky; top: 90px;
+  }
+  .product-main-image {
+    width: 100%; height: 350px;
+    background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .product-main-image img { width: 100%; height: 100%; object-fit: cover; }
+  .product-main-image .placeholder-icon { font-size: 4rem; color: #a5d6a7; }
+  .product-image-footer {
+    padding: 1rem; text-align: center; font-size: 0.8rem; color: #999;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  /* Info Section */
+  .product-info-section { padding: 0.5rem 0; }
+  .product-seller {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: #e8f5e9; color: #2e7d32; padding: 0.3rem 0.8rem;
+    border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  .product-seller i { font-size: 0.7rem; }
+  .product-info-section h1 {
+    font-size: 1.7rem; color: #1b5e20; font-weight: 700; margin-bottom: 0.8rem; line-height: 1.3;
+  }
+  .product-desc { color: #555; font-size: 0.95rem; line-height: 1.7; margin-bottom: 1.5rem; }
+  .product-price-box {
+    background: #f1f8e9; border-radius: 10px; padding: 1rem 1.2rem;
+    margin-bottom: 1.5rem; border: 1px solid #c8e6c9;
+  }
+  .product-price-box .price { font-size: 1.3rem; font-weight: 700; color: #2e7d32; }
+  .product-price-box .price-note { font-size: 0.8rem; color: #666; margin-top: 0.3rem; }
+
+  /* Variant Selectors */
+  .variant-section { margin-bottom: 1.5rem; }
+  .variant-group { margin-bottom: 1rem; }
+  .variant-label {
+    font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 0.5rem;
+    text-transform: capitalize;
+  }
+  .variant-options { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .variant-option {
+    padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 6px;
+    font-size: 0.85rem; color: #555; cursor: pointer;
+    transition: all 0.2s; background: #fff;
+  }
+  .variant-option:hover { border-color: #4CAF50; color: #2e7d32; }
+  .variant-option.selected {
+    background: #2e7d32; color: #fff; border-color: #2e7d32;
+  }
+
+  /* Quantity */
+  .quantity-section { margin-bottom: 1.5rem; }
+  .quantity-section label { font-size: 0.85rem; font-weight: 600; color: #333; display: block; margin-bottom: 0.5rem; }
+  .quantity-control { display: flex; align-items: center; gap: 0; }
+  .qty-btn {
+    width: 38px; height: 38px; border: 1px solid #ddd;
+    background: #fff; color: #333; font-size: 1.1rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .qty-btn:first-child { border-radius: 6px 0 0 6px; }
+  .qty-btn:last-child { border-radius: 0 6px 6px 0; }
+  .qty-btn:hover { background: #e8f5e9; color: #2e7d32; }
+  .qty-input {
+    width: 60px; height: 38px; border: 1px solid #ddd; border-left: none; border-right: none;
+    text-align: center; font-size: 1rem; font-weight: 600; color: #333;
+    -moz-appearance: textfield;
+  }
+  .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* Add to Cart Button */
+  .add-to-cart-btn {
+    width: 100%; padding: 1rem; background: #2e7d32; color: #fff;
+    border: none; border-radius: 8px; font-size: 1.05rem; font-weight: 700;
+    cursor: pointer; transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+  .add-to-cart-btn:hover { background: #1b5e20; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(46,125,50,0.3); }
+  .add-to-cart-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+  .add-to-cart-btn.added { background: #43a047; }
+
+  /* Features & Usage */
+  .product-extras { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e8f5e9; }
+  .extras-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .extras-block h3 { font-size: 0.9rem; color: #333; margin-bottom: 0.6rem; font-weight: 600; }
+  .extras-block ul { list-style: none; padding: 0; }
+  .extras-block ul li {
+    font-size: 0.85rem; color: #555; padding: 0.3rem 0;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .extras-block ul li::before { content: ''; width: 6px; height: 6px; background: #4CAF50; border-radius: 50%; }
+  .moq-note {
+    margin-top: 1.5rem; padding: 0.8rem 1rem;
+    background: #fff3e0; border-radius: 6px; border: 1px solid #ffe0b2;
+    font-size: 0.85rem; color: #e65100;
+  }
+  .moq-note i { margin-right: 0.4rem; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    background: #2e7d32; color: #fff; padding: 1rem 1.5rem;
+    border-radius: 8px; font-size: 0.9rem; font-weight: 500;
+    transform: translateY(100px); opacity: 0; transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 768px) {
+    .product-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+    .product-image-section { position: static; }
+    .extras-grid { grid-template-columns: 1fr; }
+    .product-info-section h1 { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Eco<span>World</span>.earth</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li class="nav-cart"><a href="cart.html"><i class="fas fa-shopping-cart"></i><span class="cart-count" id="cartCount">0</span></a></li>
+  </ul>
+</nav>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb" style="padding-top:5rem;" id="breadcrumb"></div>
+
+<!-- Product Detail -->
+<div class="product-detail" id="productDetail"></div>
+
+<!-- Toast -->
+<div class="toast" id="toast">Added to cart!</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div>
+    <a href="products.html">Products</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+    <a href="privacy-policy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </div>
+  <p class="footer-copy">&copy; 2025 EcoWorld Earth Products. All rights reserved.</p>
+</footer>
+
+<script src="assets/js/products-data.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const productId = params.get('id');
+  const result = getProductById(productId);
+
+  if (!result) {
+    window.location.href = 'products.html';
+  } else {
+    const { product, subcategory, category } = result;
+    document.title = `${product.name} - EcoWorld.earth`;
+
+    // Breadcrumb
+    document.getElementById('breadcrumb').innerHTML = `
+      <a href="index.html">Home</a><span class="sep">/</span>
+      <a href="products.html">Products</a><span class="sep">/</span>
+      <a href="category.html?cat=${category.id}">${category.name}</a><span class="sep">/</span>
+      <a href="subcategory.html?cat=${category.id}&sub=${subcategory.id}">${subcategory.name}</a><span class="sep">/</span>
+      <span>${product.name}</span>
+    `;
+
+    // Build variant selectors HTML
+    const variantKeys = Object.keys(product.variants);
+    let variantsHtml = '';
+    variantKeys.forEach(key => {
+      variantsHtml += `
+        <div class="variant-group">
+          <div class="variant-label">${key.replace(/([A-Z])/g, ' $1').trim()}</div>
+          <div class="variant-options" data-variant="${key}">
+            ${product.variants[key].map((opt, i) => `
+              <button class="variant-option ${i === 0 ? 'selected' : ''}" data-key="${key}" data-value="${opt}">${opt}</button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    });
+
+    // Product detail layout
+    document.getElementById('productDetail').innerHTML = `
+      <div class="product-layout">
+        <div class="product-image-section">
+          <div class="product-main-image">
+            ${product.image ? `<img src="${product.image}" alt="${product.name}">` : `<i class="${category.icon} placeholder-icon"></i>`}
+          </div>
+          <div class="product-image-footer">Image placeholder — actual product image coming soon</div>
+        </div>
+        <div class="product-info-section">
+          <div class="product-seller"><i class="fas fa-check-circle"></i> Sold by ${STORE_CONFIG.defaultSeller.name}</div>
+          <h1>${product.name}</h1>
+          <p class="product-desc">${product.description}</p>
+
+          <div class="product-price-box">
+            <div class="price">${product.priceLabel}</div>
+            <div class="price-note">${product.bulkPricing ? 'Bulk pricing available on request' : ''}</div>
+          </div>
+
+          <div class="variant-section">
+            ${variantsHtml}
+          </div>
+
+          <div class="quantity-section">
+            <label>Quantity</label>
+            <div class="quantity-control">
+              <button class="qty-btn" id="qtyMinus">−</button>
+              <input type="number" class="qty-input" id="qtyInput" value="1" min="1" max="9999">
+              <button class="qty-btn" id="qtyPlus">+</button>
+            </div>
+          </div>
+
+          <button class="add-to-cart-btn" id="addToCartBtn">
+            <i class="fas fa-cart-plus"></i> Add to Cart
+          </button>
+
+          <div class="product-extras">
+            <div class="extras-grid">
+              <div class="extras-block">
+                <h3>Features</h3>
+                <ul>${product.features.map(f => `<li>${f}</li>`).join('')}</ul>
+              </div>
+              <div class="extras-block">
+                <h3>Best For</h3>
+                <ul>${product.usage.map(u => `<li>${u}</li>`).join('')}</ul>
+              </div>
+            </div>
+            ${product.moq ? `<div class="moq-note"><i class="fas fa-info-circle"></i> Minimum Order Quantity: ${product.moq}</div>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // === VARIANT SELECTION LOGIC ===
+    document.querySelectorAll('.variant-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        // Deselect siblings
+        btn.closest('.variant-options').querySelectorAll('.variant-option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+    });
+
+    // === QUANTITY LOGIC ===
+    const qtyInput = document.getElementById('qtyInput');
+    document.getElementById('qtyMinus').addEventListener('click', () => {
+      const val = parseInt(qtyInput.value) || 1;
+      if (val > 1) qtyInput.value = val - 1;
+    });
+    document.getElementById('qtyPlus').addEventListener('click', () => {
+      const val = parseInt(qtyInput.value) || 1;
+      qtyInput.value = val + 1;
+    });
+
+    // === ADD TO CART ===
+    document.getElementById('addToCartBtn').addEventListener('click', () => {
+      const btn = document.getElementById('addToCartBtn');
+
+      // Gather selected variants
+      const selectedVariants = {};
+      document.querySelectorAll('.variant-options').forEach(group => {
+        const key = group.dataset.variant;
+        const selected = group.querySelector('.variant-option.selected');
+        if (selected) selectedVariants[key] = selected.dataset.value;
+      });
+
+      const quantity = parseInt(qtyInput.value) || 1;
+      const price = product.basePrice || 0; // 0 means price on request
+
+      addToCart(product.id, selectedVariants, quantity, price, product.sellerId);
+      updateNavCartBadge();
+
+      // UI feedback
+      btn.innerHTML = '<i class="fas fa-check"></i> Added to Cart!';
+      btn.classList.add('added');
+      showToast('Product added to cart!');
+
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-cart-plus"></i> Add to Cart';
+        btn.classList.remove('added');
+      }, 2000);
+    });
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  updateNavCartBadge();
+</script>
+</body>
+</html>

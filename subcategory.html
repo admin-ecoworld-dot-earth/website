@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Sub-Category - EcoWorld.earth</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="stylesheet" href="assets/css/fontawesome-all.min.css" />
+<link rel="stylesheet" href="assets/css/marketplace.css" />
+<style>
+  .product-card-price {
+    font-size: 0.9rem; color: #2e7d32; font-weight: 600; margin-top: 0.3rem;
+  }
+  .product-card-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; }
+  .product-card-tags .tag {
+    background: #e8f5e9; color: #2e7d32; padding: 0.15rem 0.5rem;
+    border-radius: 4px; font-size: 0.7rem; font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Eco<span>World</span>.earth</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li class="nav-cart"><a href="cart.html"><i class="fas fa-shopping-cart"></i><span class="cart-count" id="cartCount">0</span></a></li>
+  </ul>
+</nav>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb" style="padding-top:5rem;" id="breadcrumb"></div>
+
+<!-- Page Header -->
+<div class="page-header" id="pageHeader"></div>
+
+<!-- Product Cards Grid -->
+<div class="card-grid" id="productGrid"></div>
+
+<!-- Info Bar -->
+<div class="info-bar">
+  <div class="info-bar-item"><i class="fas fa-boxes"></i> Bulk Orders Accepted</div>
+  <div class="info-bar-item"><i class="fas fa-file-invoice"></i> GST Invoice Available</div>
+  <div class="info-bar-item"><i class="fas fa-ruler-combined"></i> Custom Sizing on Request</div>
+  <div class="info-bar-item"><i class="fas fa-truck"></i> Pan-India Delivery</div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div>
+    <a href="products.html">Products</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+    <a href="privacy-policy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </div>
+  <p class="footer-copy">&copy; 2025 EcoWorld Earth Products. All rights reserved.</p>
+</footer>
+
+<script src="assets/js/products-data.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const catId = params.get('cat');
+  const subId = params.get('sub');
+  const category = getCategoryById(catId);
+  const subcategory = getSubcategoryById(catId, subId);
+
+  if (!category || !subcategory) {
+    window.location.href = catId ? `category.html?cat=${catId}` : 'products.html';
+  } else {
+    // Update page title
+    document.title = `${subcategory.name} - EcoWorld.earth`;
+
+    // Breadcrumb
+    document.getElementById('breadcrumb').innerHTML = `
+      <a href="index.html">Home</a><span class="sep">/</span>
+      <a href="products.html">Products</a><span class="sep">/</span>
+      <a href="category.html?cat=${catId}">${category.name}</a><span class="sep">/</span>
+      <span>${subcategory.name}</span>
+    `;
+
+    // Page Header
+    document.getElementById('pageHeader').innerHTML = `
+      <h1>${subcategory.name}</h1>
+      <p>${subcategory.description}</p>
+    `;
+
+    // Product cards
+    const grid = document.getElementById('productGrid');
+    subcategory.products.forEach(product => {
+      const variantKeys = Object.keys(product.variants);
+      const firstVariants = variantKeys.slice(0, 2).map(k =>
+        product.variants[k].slice(0, 3).join(', ')
+      );
+
+      grid.innerHTML += `
+        <a href="product-detail.html?id=${product.id}" class="card">
+          <div class="card-image">
+            ${product.image ? `<img src="${product.image}" alt="${product.name}">` : `<i class="${category.icon} placeholder-icon"></i>`}
+          </div>
+          <div class="card-body">
+            <h3>${product.name}</h3>
+            <p>${product.description}</p>
+            <div class="product-card-price">${product.priceLabel}</div>
+            <div class="product-card-tags">
+              ${product.usage.slice(0, 4).map(u => `<span class="tag">${u}</span>`).join('')}
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="card-link">View Details <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </a>
+      `;
+    });
+  }
+  updateNavCartBadge();
+</script>
+</body>
+</html>
