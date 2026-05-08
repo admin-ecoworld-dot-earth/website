@@ -1,0 +1,305 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Login / Register - EcoWorld.earth</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="stylesheet" href="assets/css/fontawesome-all.min.css" />
+<link rel="stylesheet" href="assets/css/marketplace.css" />
+<style>
+  .auth-page {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 5rem 1rem 2rem; background: linear-gradient(135deg, #f9fdf9 0%, #e8f5e9 100%);
+  }
+  .auth-card {
+    background: #fff; border-radius: 18px; box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+    width: 100%; max-width: 420px; overflow: hidden;
+  }
+  .auth-header {
+    background: linear-gradient(135deg, #1b5e20, #2e7d32);
+    padding: 2rem 2rem 1.5rem; text-align: center; color: #fff;
+  }
+  .auth-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .auth-header p { font-size: 0.85rem; opacity: 0.85; }
+  .auth-tabs {
+    display: flex; background: rgba(255,255,255,0.15); border-radius: 8px;
+    margin-top: 1.2rem; overflow: hidden;
+  }
+  .auth-tab {
+    flex: 1; padding: 0.6rem; text-align: center; cursor: pointer;
+    font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.7);
+    transition: all 0.3s; border: none; background: none;
+  }
+  .auth-tab.active { background: rgba(255,255,255,0.25); color: #fff; border-radius: 6px; }
+  .auth-body { padding: 2rem; }
+  .auth-form { display: none; }
+  .auth-form.active { display: block; }
+  .form-group { margin-bottom: 1rem; }
+  .form-group label {
+    display: block; font-size: 0.8rem; font-weight: 600;
+    color: #555; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .form-group input {
+    width: 100%; padding: 0.8rem 1rem; border: 1.5px solid #e0e0e0;
+    border-radius: 8px; font-size: 0.92rem; color: #333;
+    font-family: inherit; transition: all 0.2s;
+  }
+  .form-group input:focus {
+    outline: none; border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76,175,80,0.12);
+  }
+  .auth-btn {
+    width: 100%; padding: 0.9rem; background: #2e7d32; color: #fff;
+    border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; transition: all 0.3s; margin-top: 0.5rem;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+  .auth-btn:hover { background: #1b5e20; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(46,125,50,0.3); }
+  .auth-btn:disabled { background: #a5d6a7; cursor: not-allowed; transform: none; box-shadow: none; }
+  .auth-error {
+    background: #ffebee; color: #c62828; font-size: 0.82rem; padding: 0.6rem 0.8rem;
+    border-radius: 6px; margin-bottom: 1rem; display: none; text-align: center;
+  }
+  .auth-error.visible { display: block; }
+  .auth-success {
+    background: #e8f5e9; color: #2e7d32; font-size: 0.82rem; padding: 0.6rem 0.8rem;
+    border-radius: 6px; margin-bottom: 1rem; display: none; text-align: center;
+  }
+  .auth-success.visible { display: block; }
+  .auth-footer { text-align: center; margin-top: 1.5rem; font-size: 0.82rem; color: #888; }
+  .auth-footer a { color: #2e7d32; font-weight: 600; cursor: pointer; }
+  .pass-toggle {
+    position: relative;
+  }
+  .pass-toggle input { padding-right: 2.5rem; }
+  .pass-toggle button {
+    position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: #999; cursor: pointer; font-size: 0.9rem;
+  }
+  @media (max-width: 480px) {
+    .auth-card { border-radius: 0; min-height: 100vh; }
+    .auth-page { padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Eco<span>World</span>.earth</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li class="nav-cart"><a href="cart.html"><i class="fas fa-shopping-cart"></i><span class="cart-count" id="cartCount">0</span></a></li>
+  </ul>
+</nav>
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1><i class="fas fa-leaf"></i> EcoWorld</h1>
+      <p>Your eco-friendly marketplace</p>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+        <button class="auth-tab" onclick="switchTab('register')">Register</button>
+      </div>
+    </div>
+    <div class="auth-body">
+
+      <!-- Login Form -->
+      <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
+        <div class="auth-error" id="loginError"></div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="pass-toggle">
+            <input type="password" id="loginPassword" placeholder="Enter password" required autocomplete="current-password">
+            <button type="button" onclick="togglePass('loginPassword', this)"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <button class="auth-btn" type="submit" id="loginBtn">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+        <div class="auth-footer">
+          Don't have an account? <a onclick="switchTab('register')">Register</a>
+        </div>
+      </form>
+
+      <!-- Register Form -->
+      <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+        <div class="auth-error" id="registerError"></div>
+        <div class="auth-success" id="registerSuccess"></div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="regName" placeholder="Your full name" required autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="pass-toggle">
+            <input type="password" id="regPassword" placeholder="Min 6 characters" required minlength="6" autocomplete="new-password">
+            <button type="button" onclick="togglePass('regPassword', this)"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <div class="pass-toggle">
+            <input type="password" id="regConfirm" placeholder="Confirm password" required autocomplete="new-password">
+            <button type="button" onclick="togglePass('regConfirm', this)"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <button class="auth-btn" type="submit" id="registerBtn">
+          <i class="fas fa-user-plus"></i> Create Account
+        </button>
+        <div class="auth-footer">
+          Already have an account? <a onclick="switchTab('login')">Login</a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = 'https://your-backend.onrender.com/api';
+
+  // If already logged in, redirect to dashboard
+  if (localStorage.getItem('ecoToken')) {
+    window.location.href = 'dashboard.html';
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    if (tab === 'login') {
+      document.querySelectorAll('.auth-tab')[0].classList.add('active');
+      document.getElementById('loginForm').classList.add('active');
+    } else {
+      document.querySelectorAll('.auth-tab')[1].classList.add('active');
+      document.getElementById('registerForm').classList.add('active');
+    }
+    // Clear errors
+    document.querySelectorAll('.auth-error, .auth-success').forEach(e => e.classList.remove('visible'));
+  }
+
+  function togglePass(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+    } else {
+      input.type = 'password';
+      btn.innerHTML = '<i class="fas fa-eye"></i>';
+    }
+  }
+
+  function showError(el, msg) {
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  function hideErrors() {
+    document.querySelectorAll('.auth-error, .auth-success').forEach(e => e.classList.remove('visible'));
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    hideErrors();
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('loginEmail').value.trim(),
+          password: document.getElementById('loginPassword').value
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        showError(document.getElementById('loginError'), data.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+        return;
+      }
+
+      // Save token and user info
+      localStorage.setItem('ecoToken', data.token);
+      localStorage.setItem('ecoUser', JSON.stringify(data.user));
+      window.location.href = 'dashboard.html';
+
+    } catch (error) {
+      showError(document.getElementById('loginError'), 'Connection failed. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+    }
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    hideErrors();
+
+    const password = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirm').value;
+
+    if (password !== confirm) {
+      showError(document.getElementById('registerError'), 'Passwords do not match');
+      return;
+    }
+
+    const btn = document.getElementById('registerBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: document.getElementById('regName').value.trim(),
+          email: document.getElementById('regEmail').value.trim(),
+          password
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        showError(document.getElementById('registerError'), data.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+        return;
+      }
+
+      // Auto-login after registration
+      localStorage.setItem('ecoToken', data.token);
+      localStorage.setItem('ecoUser', JSON.stringify(data.user));
+      window.location.href = 'dashboard.html';
+
+    } catch (error) {
+      showError(document.getElementById('registerError'), 'Connection failed. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+    }
+  }
+</script>
+</body>
+</html>
