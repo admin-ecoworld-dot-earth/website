@@ -26,6 +26,20 @@ const CATALOG = [
         image: "",
         products: [
           {
+            id: "TEST001",
+            name: "Test Product - Payment Testing",
+            description: "This is a test product for payment gateway testing. Do not order.",
+            image: "",
+            sellerId: "ecoworld",
+            basePrice: 1,
+            priceLabel: "₹1 / piece",
+            bulkPricing: false,
+            variants: {},
+            usage: ["Testing"],
+            features: ["Payment test only"],
+            moq: "1 piece"
+          },
+          {
             id: "PPKB001",
             name: "Kraft Paper Carry Bag - Brown",
             description: "Premium brown kraft paper bag with twisted rope handle. Ideal for retail, food takeaway, and gifting. Recyclable and plastic-free.",
