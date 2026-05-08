@@ -1,6 +1,6 @@
 const express = require('express');
 const Order = require('../models/Order');
-
+const auth = require('../middleware/auth');
 const router = express.Router();
 
 // GET /api/orders/track/:orderId
@@ -66,8 +66,11 @@ router.get('/phone/:phone', async (req, res) => {
 });
 
 // PATCH /api/orders/:orderId/status
-// Admin — Update order status (in production, protect with auth middleware)
-router.patch('/:orderId/status', async (req, res) => {
+// Admin — Update order status (protected with auth + admin check)
+router.patch('/:orderId/status', auth, async (req, res) => {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const { orderId } = req.params;
     const { status, note, trackingNumber, estimatedDelivery } = req.body;
