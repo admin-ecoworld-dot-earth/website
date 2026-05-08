@@ -1,7 +1,6 @@
 const express = require('express');
 const Order = require('../models/Order');
 const auth = require('../middleware/auth');
-
 const router = express.Router();
 
 // GET /api/orders/track/:orderId
@@ -72,7 +71,6 @@ router.patch('/:orderId/status', auth, async (req, res) => {
   if (!req.user.isAdmin) {
     return res.status(403).json({ success: false, message: 'Admin access required' });
   }
-
   try {
     const { orderId } = req.params;
     const { status, note, trackingNumber, estimatedDelivery } = req.body;
