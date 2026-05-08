@@ -1,0 +1,673 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Cart - EcoWorld.earth</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="stylesheet" href="assets/css/fontawesome-all.min.css" />
+<link rel="stylesheet" href="assets/css/marketplace.css" />
+<!-- Razorpay Checkout SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+  .cart-page { max-width: 1000px; margin: 0 auto; padding: 1.5rem 1rem; }
+  .cart-page h1 { font-size: 1.8rem; color: #1b5e20; font-weight: 700; margin-bottom: 1.5rem; }
+
+  .cart-empty { text-align: center; padding: 4rem 1rem; }
+  .cart-empty i { font-size: 4rem; color: #c8e6c9; margin-bottom: 1rem; }
+  .cart-empty h2 { color: #555; font-weight: 600; margin-bottom: 0.5rem; }
+  .cart-empty p { color: #888; margin-bottom: 1.5rem; }
+  .cart-empty a {
+    display: inline-block; padding: 0.8rem 2rem;
+    background: #2e7d32; color: #fff; border-radius: 8px;
+    text-decoration: none; font-weight: 600; transition: all 0.3s;
+  }
+  .cart-empty a:hover { background: #1b5e20; }
+
+  .cart-layout { display: grid; grid-template-columns: 1fr 350px; gap: 2rem; align-items: start; }
+  .cart-items { display: flex; flex-direction: column; gap: 1rem; }
+  .cart-item {
+    display: grid; grid-template-columns: 80px 1fr auto;
+    gap: 1rem; align-items: center;
+    background: #fff; border-radius: 10px; border: 1px solid #e8f5e9;
+    padding: 1rem; transition: all 0.2s;
+  }
+  .cart-item:hover { box-shadow: 0 2px 10px rgba(46,125,50,0.08); }
+  .cart-item-image {
+    width: 80px; height: 80px; background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .cart-item-image i { font-size: 1.8rem; color: #a5d6a7; }
+  .cart-item-info h3 { font-size: 0.95rem; color: #333; font-weight: 600; margin-bottom: 0.3rem; }
+  .cart-item-variants { font-size: 0.8rem; color: #777; margin-bottom: 0.5rem; }
+  .cart-item-variants span {
+    display: inline-block; background: #f5f5f5; padding: 0.15rem 0.5rem;
+    border-radius: 4px; margin-right: 0.3rem; margin-bottom: 0.2rem;
+  }
+  .cart-item-qty { display: flex; align-items: center; gap: 0; }
+  .cart-item-qty button {
+    width: 30px; height: 30px; border: 1px solid #ddd;
+    background: #fff; cursor: pointer; font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .cart-item-qty button:first-child { border-radius: 4px 0 0 4px; }
+  .cart-item-qty button:last-child { border-radius: 0 4px 4px 0; }
+  .cart-item-qty button:hover { background: #e8f5e9; color: #2e7d32; }
+  .cart-item-qty input {
+    width: 40px; height: 30px; border: 1px solid #ddd; border-left: none; border-right: none;
+    text-align: center; font-size: 0.85rem; font-weight: 600; -moz-appearance: textfield;
+  }
+  .cart-item-qty input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .cart-item-price { font-weight: 700; color: #2e7d32; font-size: 0.95rem; white-space: nowrap; }
+  .cart-item-remove {
+    background: none; border: none; color: #e53935; cursor: pointer;
+    font-size: 1rem; padding: 0.3rem; transition: all 0.2s;
+  }
+  .cart-item-remove:hover { transform: scale(1.2); }
+  .cart-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
+
+  .cart-summary {
+    background: #fff; border-radius: 12px; border: 1px solid #e8f5e9;
+    padding: 1.5rem; position: sticky; top: 90px;
+  }
+  .cart-summary h2 { font-size: 1.1rem; color: #333; margin-bottom: 1rem; font-weight: 700; }
+  .summary-line {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.5rem 0; font-size: 0.9rem; color: #555;
+  }
+  .summary-line.total {
+    font-weight: 700; color: #1b5e20; font-size: 1.1rem;
+    border-top: 2px solid #e8f5e9; margin-top: 0.5rem; padding-top: 0.8rem;
+  }
+  .summary-note {
+    font-size: 0.8rem; color: #888; margin-top: 1rem; padding: 0.6rem;
+    background: #fafafa; border-radius: 6px; text-align: center;
+  }
+  .checkout-btn {
+    width: 100%; padding: 1rem; background: #2e7d32; color: #fff;
+    border: none; border-radius: 8px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; margin-top: 1rem; transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+  .checkout-btn:hover { background: #1b5e20; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(46,125,50,0.3); }
+  .clear-cart-btn {
+    width: 100%; padding: 0.6rem; background: none; border: 1px solid #e53935;
+    border-radius: 6px; color: #e53935; font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; margin-top: 0.5rem; transition: all 0.2s;
+  }
+  .clear-cart-btn:hover { background: #ffebee; }
+
+  /* Checkout Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);
+    align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 500px;
+    max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: modalIn 0.3s ease;
+  }
+  @keyframes modalIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.5rem 1.5rem 0;
+  }
+  .modal-header h2 { font-size: 1.3rem; color: #1b5e20; font-weight: 700; margin: 0; }
+  .modal-close {
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: #f5f5f5; cursor: pointer; font-size: 1.2rem; color: #555;
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .modal-close:hover { background: #e8f5e9; color: #2e7d32; }
+  .modal-body { padding: 1.5rem; }
+
+  .customer-info { margin-bottom: 1.5rem; }
+  .customer-info h3 { font-size: 0.95rem; color: #333; font-weight: 700; margin-bottom: 0.8rem; }
+  .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 0.8rem; }
+  .info-row.full { grid-template-columns: 1fr; }
+  .info-row input, .info-row textarea {
+    width: 100%; padding: 0.7rem 0.9rem; border: 1px solid #ddd;
+    border-radius: 8px; font-size: 0.88rem; font-family: inherit; color: #333;
+    transition: border-color 0.2s;
+  }
+  .info-row input:focus, .info-row textarea:focus { outline: none; border-color: #4CAF50; box-shadow: 0 0 0 3px rgba(76,175,80,0.1); }
+  .info-row textarea { resize: vertical; min-height: 60px; }
+
+  /* Payment Method Selection */
+  .payment-methods { margin-bottom: 1.5rem; }
+  .payment-methods h3 { font-size: 0.95rem; color: #333; font-weight: 700; margin-bottom: 0.8rem; }
+  .pay-method-options { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .pay-method-btn {
+    flex: 1; min-width: 130px; padding: 0.9rem 0.6rem; border: 2px solid #e8f5e9;
+    border-radius: 10px; background: #fff; cursor: pointer;
+    text-align: center; transition: all 0.2s;
+  }
+  .pay-method-btn:hover { border-color: #a5d6a7; }
+  .pay-method-btn.selected { border-color: #2e7d32; background: #f9fdf9; }
+  .pay-method-btn i { display: block; font-size: 1.3rem; color: #2e7d32; margin-bottom: 0.4rem; }
+  .pay-method-btn span { font-size: 0.78rem; font-weight: 600; color: #555; }
+  .pay-method-btn .badge-sm {
+    display: block; font-size: 0.65rem; color: #e65100; margin-top: 0.2rem;
+  }
+
+  .place-order-btn {
+    width: 100%; padding: 1rem; background: #2e7d32; color: #fff;
+    border: none; border-radius: 8px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+  .place-order-btn:hover { background: #1b5e20; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(46,125,50,0.3); }
+  .place-order-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Order Result */
+  .order-result { text-align: center; padding: 1rem 0; }
+  .order-result .result-icon {
+    width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1.2rem;
+    display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+  }
+  .order-result .result-icon.success { background: #e8f5e9; color: #2e7d32; }
+  .order-result .result-icon.failed { background: #ffebee; color: #e53935; }
+  .order-result h3 { font-size: 1.4rem; margin-bottom: 0.5rem; font-weight: 700; }
+  .order-result h3.success { color: #1b5e20; }
+  .order-result h3.failed { color: #e53935; }
+  .order-result p { font-size: 0.9rem; color: #666; line-height: 1.6; margin-bottom: 0.5rem; }
+  .order-result .order-id {
+    display: inline-block; background: #f5f5f5; padding: 0.4rem 1rem;
+    border-radius: 6px; font-family: monospace; font-size: 0.95rem;
+    font-weight: 700; color: #333; margin: 0.8rem 0 1.5rem;
+  }
+  .order-result .result-btn {
+    display: inline-block; padding: 0.8rem 2rem; border-radius: 8px;
+    font-weight: 700; text-decoration: none; font-size: 0.9rem;
+    cursor: pointer; transition: all 0.3s; border: none;
+  }
+  .order-result .result-btn.primary { background: #2e7d32; color: #fff; }
+  .order-result .result-btn.primary:hover { background: #1b5e20; }
+  .order-result .result-btn.secondary { background: #f5f5f5; color: #555; margin-left: 0.5rem; }
+
+  /* Loading Spinner */
+  .loading-overlay {
+    display: none; position: absolute; inset: 0; z-index: 10;
+    background: rgba(255,255,255,0.9); border-radius: 16px;
+    align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
+  }
+  .loading-overlay.active { display: flex; }
+  .spinner {
+    width: 40px; height: 40px; border: 4px solid #e8f5e9;
+    border-top-color: #2e7d32; border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .cart-layout { grid-template-columns: 1fr; }
+    .cart-item { grid-template-columns: 60px 1fr; }
+    .cart-item-right { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }
+    .cart-summary { position: static; }
+    .info-row { grid-template-columns: 1fr; }
+    .pay-method-options { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Eco<span>World</span>.earth</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="dashboard.html" id="navAccount"><i class="fas fa-user-circle"></i> Account</a></li>
+    <li class="nav-cart"><a href="cart.html"><i class="fas fa-shopping-cart"></i><span class="cart-count" id="cartCount">0</span></a></li>
+  </ul>
+</nav>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb" style="padding-top:5rem;">
+  <a href="index.html">Home</a><span class="sep">/</span>
+  <span>Cart</span>
+</div>
+
+<!-- Cart Content -->
+<div class="cart-page" id="cartPage"></div>
+
+<!-- Checkout Modal -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal" style="position:relative;">
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <p style="color:#555;font-size:0.9rem;">Processing...</p>
+    </div>
+
+    <div class="modal-header">
+      <h2 id="modalTitle">Checkout</h2>
+      <button class="modal-close" onclick="closeCheckout()">&times;</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- STEP 1: Delivery + Payment Method -->
+      <div id="checkoutStep1">
+        <div class="customer-info">
+          <h3>Delivery Details</h3>
+          <div class="info-row">
+            <input type="text" id="custName" placeholder="Full Name *">
+            <input type="tel" id="custPhone" placeholder="Phone Number *">
+          </div>
+          <div class="info-row full">
+            <input type="email" id="custEmail" placeholder="Email (optional)">
+          </div>
+          <div class="info-row full">
+            <textarea id="custAddress" placeholder="Delivery Address *"></textarea>
+          </div>
+          <div class="info-row">
+            <input type="text" id="custCity" placeholder="City *">
+            <input type="text" id="custPincode" placeholder="Pincode *">
+          </div>
+        </div>
+
+        <div class="payment-methods">
+          <h3>Payment Method</h3>
+          <div class="pay-method-options">
+            <div class="pay-method-btn selected" onclick="selectMethod(this, 'razorpay')">
+              <i class="fas fa-credit-card"></i>
+              <span>Pay Online</span>
+              <span class="badge-sm">UPI / Card / Net Banking</span>
+            </div>
+            <div class="pay-method-btn" onclick="selectMethod(this, 'cod')">
+              <i class="fas fa-hand-holding-usd"></i>
+              <span>Cash on Delivery</span>
+              <span class="badge-sm">Bangalore Only</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="place-order-btn" id="placeOrderBtn" onclick="initiatePayment()">
+          <i class="fas fa-lock"></i> Place Order & Pay
+        </button>
+        <p style="font-size:0.75rem;color:#999;text-align:center;margin-top:0.8rem;">
+          <i class="fas fa-shield-alt"></i> Secured by Razorpay. 100% safe payment.
+        </p>
+      </div>
+
+      <!-- STEP 2: Order Result -->
+      <div id="checkoutStep2" style="display:none;">
+        <div class="order-result" id="orderResult"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div>
+    <a href="products.html">Products</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+    <a href="privacy-policy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </div>
+  <p class="footer-copy">&copy; 2026 EcoWorld Earth Products. All rights reserved.</p>
+</footer>
+
+<script src="assets/js/products-data.js"></script>
+<script src="assets/js/auth-nav.js"></script>
+<script>
+  // === CONFIG ===
+  const API_BASE = 'https://your-backend.onrender.com/api'; // Change after deploying backend
+
+  let selectedPayMethod = 'razorpay';
+
+  // === CART RENDERING ===
+  function renderCart() {
+    const cart = getCart();
+    const container = document.getElementById('cartPage');
+
+    if (cart.length === 0) {
+      container.innerHTML = `
+        <div class="cart-empty">
+          <i class="fas fa-shopping-cart"></i>
+          <h2>Your cart is empty</h2>
+          <p>Browse our eco-friendly products and add items to your cart.</p>
+          <a href="products.html">Browse Products</a>
+        </div>
+      `;
+      return;
+    }
+
+    let itemsHtml = '';
+    let itemCount = 0;
+    let totalPrice = 0;
+
+    cart.forEach((item, index) => {
+      const productInfo = getProductById(item.productId);
+      const name = productInfo ? productInfo.product.name : item.productId;
+      const icon = productInfo ? productInfo.category.icon : 'fas fa-box';
+
+      let variantHtml = '';
+      if (item.variants && Object.keys(item.variants).length > 0) {
+        variantHtml = Object.entries(item.variants).map(([k, v]) =>
+          `<span>${k.replace(/([A-Z])/g, ' $1').trim()}: ${v}</span>`
+        ).join('');
+      }
+
+      const lineTotal = item.price * item.quantity;
+      totalPrice += lineTotal;
+      itemCount += item.quantity;
+
+      itemsHtml += `
+        <div class="cart-item">
+          <div class="cart-item-image"><i class="${icon}"></i></div>
+          <div class="cart-item-info">
+            <h3>${name}</h3>
+            <div class="cart-item-variants">${variantHtml}</div>
+            <div class="cart-item-qty">
+              <button onclick="changeQty(${index}, -1)">-</button>
+              <input type="number" value="${item.quantity}" min="1" onchange="setQty(${index}, this.value)">
+              <button onclick="changeQty(${index}, 1)">+</button>
+            </div>
+          </div>
+          <div class="cart-item-right">
+            <div class="cart-item-price">${item.price > 0 ? '\u20B9' + lineTotal.toLocaleString('en-IN') : 'Quote'}</div>
+            <button class="cart-item-remove" onclick="removeItem(${index})"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = `
+      <h1>Your Cart (${itemCount} item${itemCount > 1 ? 's' : ''})</h1>
+      <div class="cart-layout">
+        <div class="cart-items">${itemsHtml}</div>
+        <div class="cart-summary">
+          <h2>Order Summary</h2>
+          <div class="summary-line"><span>Items</span><span>${itemCount}</span></div>
+          <div class="summary-line"><span>Subtotal</span><span>\u20B9${totalPrice.toLocaleString('en-IN')}</span></div>
+          <div class="summary-line total"><span>Total</span><span>\u20B9${totalPrice.toLocaleString('en-IN')}</span></div>
+          <button class="checkout-btn" onclick="openCheckout()"><i class="fas fa-lock"></i> Proceed to Checkout</button>
+          <button class="clear-cart-btn" onclick="clearCartAction()"><i class="fas fa-trash"></i> Clear Cart</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function changeQty(index, delta) {
+    const cart = getCart();
+    if (!cart[index]) return;
+    const newQty = cart[index].quantity + delta;
+    if (newQty < 1) return;
+    updateCartItemQty(index, newQty);
+    renderCart();
+    updateNavCartBadge();
+  }
+
+  function setQty(index, val) {
+    const qty = parseInt(val) || 1;
+    if (qty < 1) return;
+    updateCartItemQty(index, qty);
+    renderCart();
+    updateNavCartBadge();
+  }
+
+  function removeItem(index) {
+    removeFromCart(index);
+    renderCart();
+    updateNavCartBadge();
+  }
+
+  function clearCartAction() {
+    if (confirm('Clear all items from cart?')) {
+      clearCart();
+      renderCart();
+      updateNavCartBadge();
+    }
+  }
+
+  // === CHECKOUT MODAL ===
+  function openCheckout() {
+    if (getCart().length === 0) return;
+    document.getElementById('checkoutStep1').style.display = 'block';
+    document.getElementById('checkoutStep2').style.display = 'none';
+    document.getElementById('modalTitle').textContent = 'Checkout';
+    document.getElementById('checkoutModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCheckout() {
+    document.getElementById('checkoutModal').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('checkoutModal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeCheckout();
+  });
+
+  function selectMethod(el, method) {
+    selectedPayMethod = method;
+    document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    // Update button text
+    const btn = document.getElementById('placeOrderBtn');
+    btn.innerHTML = method === 'cod'
+      ? '<i class="fas fa-check-circle"></i> Place COD Order'
+      : '<i class="fas fa-lock"></i> Place Order & Pay';
+  }
+
+  function showLoading(show) {
+    document.getElementById('loadingOverlay').classList.toggle('active', show);
+  }
+
+  // === PAYMENT FLOW ===
+  async function initiatePayment() {
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const email = document.getElementById('custEmail').value.trim();
+    const address = document.getElementById('custAddress').value.trim();
+    const city = document.getElementById('custCity').value.trim();
+    const pincode = document.getElementById('custPincode').value.trim();
+
+    // Validation
+    if (!name || !phone || !address || !city || !pincode) {
+      alert('Please fill in all required delivery details.');
+      return;
+    }
+    if (phone.replace(/[^0-9]/g, '').length < 10) {
+      alert('Please enter a valid phone number.');
+      return;
+    }
+    if (!/^\d{6}$/.test(pincode)) {
+      alert('Please enter a valid 6-digit pincode.');
+      return;
+    }
+
+    // COD only for Bangalore
+    if (selectedPayMethod === 'cod' && !['bangalore', 'bengaluru'].includes(city.toLowerCase())) {
+      alert('Cash on Delivery is available only within Bangalore.');
+      return;
+    }
+
+    const cart = getCart();
+    const items = cart.map(item => {
+      const info = getProductById(item.productId);
+      return {
+        productId: item.productId,
+        name: info ? info.product.name : item.productId,
+        price: item.price,
+        quantity: item.quantity,
+        variants: item.variants || {},
+        sellerId: item.sellerId || 'ecoworld'
+      };
+    });
+
+    const orderData = {
+      customer: { name, phone, email, address, city, pincode },
+      items,
+      paymentMethod: selectedPayMethod
+    };
+
+    showLoading(true);
+
+    try {
+      // Build headers — include auth token if user is logged in
+      const headers = { 'Content-Type': 'application/json' };
+      const token = localStorage.getItem('ecoToken');
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      // Call backend to create order
+      const response = await fetch(`${API_BASE}/payment/create-order`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(orderData)
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to create order');
+      }
+
+      showLoading(false);
+
+      // COD order � done!
+      if (selectedPayMethod === 'cod') {
+        showOrderSuccess(data.orderId);
+        clearCart();
+        renderCart();
+        updateNavCartBadge();
+        return;
+      }
+
+      // Razorpay payment � open gateway
+      openRazorpay(data);
+
+    } catch (error) {
+      showLoading(false);
+      console.error('Order error:', error);
+      alert('Something went wrong: ' + error.message);
+    }
+  }
+
+  function openRazorpay(data) {
+    const options = {
+      key: data.keyId,
+      amount: data.amount * 100,
+      currency: data.currency,
+      name: 'EcoWorld Earth Products',
+      description: 'Order #' + data.orderId,
+      order_id: data.razorpayOrderId,
+      prefill: {
+        name: data.customerName,
+        contact: data.customerPhone,
+        email: data.customerEmail || ''
+      },
+      theme: {
+        color: '#2e7d32'
+      },
+      handler: async function (response) {
+        // Payment success � verify on backend
+        await verifyPayment(response, data.orderId);
+      },
+      modal: {
+        ondismiss: function () {
+          // User closed Razorpay without paying
+          showOrderFailed('Payment was cancelled. Your order is not placed.');
+        }
+      }
+    };
+
+    const rzp = new Razorpay(options);
+
+    rzp.on('payment.failed', function (response) {
+      showOrderFailed('Payment failed: ' + (response.error.description || 'Please try again.'));
+    });
+
+    rzp.open();
+  }
+
+  async function verifyPayment(response, orderId) {
+    showLoading(true);
+
+    try {
+      const verifyRes = await fetch(`${API_BASE}/payment/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature
+        })
+      });
+
+      const data = await verifyRes.json();
+      showLoading(false);
+
+      if (data.success) {
+        showOrderSuccess(data.orderId);
+        clearCart();
+        renderCart();
+        updateNavCartBadge();
+      } else {
+        showOrderFailed('Payment verification failed. Contact support with your payment ID.');
+      }
+
+    } catch (error) {
+      showLoading(false);
+      console.error('Verify error:', error);
+      showOrderFailed('Could not verify payment. Please contact support.');
+    }
+  }
+
+  // === ORDER RESULT SCREENS ===
+  function showOrderSuccess(orderId) {
+    document.getElementById('checkoutStep1').style.display = 'none';
+    document.getElementById('checkoutStep2').style.display = 'block';
+    document.getElementById('modalTitle').textContent = 'Order Confirmed';
+
+    document.getElementById('orderResult').innerHTML = `
+      <div class="result-icon success"><i class="fas fa-check-circle"></i></div>
+      <h3 class="success">Order Placed Successfully!</h3>
+      <p>Thank you for your order. We'll confirm delivery details shortly.</p>
+      <div class="order-id">${orderId}</div>
+      <p style="font-size:0.8rem;color:#888;">Save this order ID to track your delivery</p>
+      <div style="margin-top:1.5rem;">
+        <a href="order-tracking.html?id=${orderId}" class="result-btn primary">Track Order</a>
+        <button class="result-btn secondary" onclick="closeCheckout()">Continue Shopping</button>
+      </div>
+    `;
+  }
+
+  function showOrderFailed(msg) {
+    document.getElementById('checkoutStep1').style.display = 'none';
+    document.getElementById('checkoutStep2').style.display = 'block';
+    document.getElementById('modalTitle').textContent = 'Payment Failed';
+
+    document.getElementById('orderResult').innerHTML = `
+      <div class="result-icon failed"><i class="fas fa-times-circle"></i></div>
+      <h3 class="failed">Payment Failed</h3>
+      <p>${msg}</p>
+      <div style="margin-top:1.5rem;">
+        <button class="result-btn primary" onclick="retryCheckout()">Try Again</button>
+        <button class="result-btn secondary" onclick="closeCheckout()">Back to Cart</button>
+      </div>
+    `;
+  }
+
+  function retryCheckout() {
+    document.getElementById('checkoutStep2').style.display = 'none';
+    document.getElementById('checkoutStep1').style.display = 'block';
+    document.getElementById('modalTitle').textContent = 'Checkout';
+  }
+
+  renderCart();
+  updateNavCartBadge();
+</script>
+</body>
+</html>

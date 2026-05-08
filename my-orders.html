@@ -1,0 +1,283 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>My Orders - EcoWorld.earth</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="stylesheet" href="assets/css/fontawesome-all.min.css" />
+<link rel="stylesheet" href="assets/css/marketplace.css" />
+<style>
+  .orders-page { max-width: 800px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  .orders-page h1 {
+    font-size: 1.8rem; color: #1b5e20; font-weight: 700; margin-bottom: 0.5rem;
+  }
+  .orders-page .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
+
+  .order-card {
+    background: #fff; border: 1px solid #e8f5e9; border-radius: 14px;
+    margin-bottom: 1.2rem; overflow: hidden; transition: all 0.2s;
+  }
+  .order-card:hover { box-shadow: 0 4px 15px rgba(46,125,50,0.08); }
+
+  .order-card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 1.2rem; background: #f9fdf9; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; gap: 0.5rem;
+  }
+  .order-card-header .order-id {
+    font-family: monospace; font-weight: 700; color: #1b5e20; font-size: 0.95rem;
+  }
+  .order-card-header .order-date { color: #999; font-size: 0.82rem; }
+  .status-badge {
+    padding: 0.3rem 0.8rem; border-radius: 16px; font-size: 0.72rem;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .status-badge.placed { background: #fff3e0; color: #e65100; }
+  .status-badge.confirmed { background: #e3f2fd; color: #1565c0; }
+  .status-badge.processing { background: #f3e5f5; color: #7b1fa2; }
+  .status-badge.shipped { background: #e8f5e9; color: #2e7d32; }
+  .status-badge.out_for_delivery { background: #e8f5e9; color: #1b5e20; }
+  .status-badge.delivered { background: #e8f5e9; color: #2e7d32; }
+  .status-badge.cancelled { background: #ffebee; color: #e53935; }
+
+  .order-card-body { padding: 1rem 1.2rem; }
+  .order-items-list { margin-bottom: 0.8rem; }
+  .order-item-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.4rem 0; font-size: 0.88rem; color: #444;
+  }
+  .order-item-row .name { flex: 1; }
+  .order-item-row .qty { color: #888; margin: 0 1rem; white-space: nowrap; }
+  .order-item-row .price { font-weight: 600; color: #2e7d32; white-space: nowrap; }
+
+  .order-card-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.8rem 1.2rem; border-top: 1px solid #f0f0f0; flex-wrap: wrap; gap: 0.5rem;
+  }
+  .order-total { font-weight: 700; color: #1b5e20; font-size: 1.05rem; }
+  .track-link {
+    color: #2e7d32; font-weight: 600; font-size: 0.85rem;
+    display: flex; align-items: center; gap: 0.3rem; text-decoration: none;
+  }
+  .track-link:hover { color: #1b5e20; text-decoration: underline; }
+
+  /* Mini timeline */
+  .mini-timeline {
+    display: flex; align-items: center; gap: 0; margin-top: 0.8rem;
+    padding-top: 0.8rem; border-top: 1px solid #f5f5f5;
+  }
+  .mini-step {
+    display: flex; flex-direction: column; align-items: center;
+    font-size: 0.68rem; color: #ccc; flex: 1; position: relative;
+  }
+  .mini-step.done { color: #2e7d32; }
+  .mini-step.current { color: #2e7d32; font-weight: 700; }
+  .mini-step .dot {
+    width: 18px; height: 18px; border-radius: 50%; border: 2px solid #e0e0e0;
+    background: #fff; margin-bottom: 0.3rem;
+    display: flex; align-items: center; justify-content: center; font-size: 0.5rem;
+  }
+  .mini-step.done .dot { border-color: #2e7d32; background: #2e7d32; color: #fff; }
+  .mini-step.current .dot { border-color: #2e7d32; background: #fff; }
+  .mini-step-line {
+    flex: 1; height: 2px; background: #e0e0e0; margin-bottom: 1rem;
+  }
+  .mini-step-line.done { background: #2e7d32; }
+
+  .empty-state {
+    text-align: center; padding: 4rem 1rem;
+  }
+  .empty-state i { font-size: 4rem; color: #c8e6c9; margin-bottom: 1rem; display: block; }
+  .empty-state h2 { color: #555; font-size: 1.3rem; margin-bottom: 0.5rem; }
+  .empty-state p { color: #888; margin-bottom: 1.5rem; }
+  .empty-state a {
+    display: inline-block; padding: 0.7rem 2rem; background: #2e7d32;
+    color: #fff; border-radius: 8px; font-weight: 600; text-decoration: none;
+  }
+
+  .loading-state { text-align: center; padding: 3rem; color: #888; }
+  .loading-state .spinner {
+    width: 36px; height: 36px; border: 4px solid #e8f5e9; border-top-color: #2e7d32;
+    border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 480px) {
+    .order-card-header { flex-direction: column; align-items: flex-start; }
+    .mini-step { font-size: 0.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Eco<span>World</span>.earth</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+    <li><a href="dashboard.html"><i class="fas fa-user-circle"></i> My Account</a></li>
+    <li class="nav-cart"><a href="cart.html"><i class="fas fa-shopping-cart"></i><span class="cart-count" id="cartCount">0</span></a></li>
+  </ul>
+</nav>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb" style="padding-top:5rem;">
+  <a href="index.html">Home</a><span class="sep">/</span>
+  <a href="dashboard.html">Dashboard</a><span class="sep">/</span>
+  <span>My Orders</span>
+</div>
+
+<div class="orders-page">
+  <h1><i class="fas fa-box" style="color:#4CAF50;"></i> My Orders</h1>
+  <p class="subtitle">View and track all your orders</p>
+
+  <div id="ordersContainer">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading your orders...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div>
+    <a href="products.html">Products</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+    <a href="privacy-policy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </div>
+  <p class="footer-copy">&copy; 2026 EcoWorld Earth Products. All rights reserved.</p>
+</footer>
+
+<script src="assets/js/products-data.js"></script>
+<script>
+  const API_BASE = 'https://your-backend.onrender.com/api';
+
+  const STATUS_STEPS = ['placed', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered'];
+  const STATUS_LABELS = {
+    placed: 'Placed', confirmed: 'Confirmed', processing: 'Processing',
+    shipped: 'Shipped', out_for_delivery: 'Out for Delivery', delivered: 'Delivered'
+  };
+  const STATUS_ICONS = {
+    placed: '📋', confirmed: '✅', processing: '⚙️',
+    shipped: '🚚', out_for_delivery: '🏍️', delivered: '📦'
+  };
+
+  // Auth check
+  const token = localStorage.getItem('ecoToken');
+  if (!token) {
+    window.location.href = 'login.html';
+  }
+
+  if (typeof updateNavCartBadge === 'function') updateNavCartBadge();
+
+  async function loadOrders() {
+    const container = document.getElementById('ordersContainer');
+
+    try {
+      const res = await fetch(`${API_BASE}/user-orders`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      const data = await res.json();
+
+      if (res.status === 401) {
+        localStorage.removeItem('ecoToken');
+        localStorage.removeItem('ecoUser');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      if (!data.success) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h2>Something went wrong</h2><p>Unable to load orders. Please try again.</p></div>';
+        return;
+      }
+
+      if (data.orders.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-box-open"></i>
+            <h2>No orders yet</h2>
+            <p>You haven't placed any orders. Start shopping!</p>
+            <a href="products.html">Browse Products</a>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      data.orders.forEach(order => {
+        const date = new Date(order.createdAt).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short', year: 'numeric'
+        });
+
+        // Items
+        let itemsHtml = '';
+        order.items.forEach(item => {
+          const lineTotal = item.price * item.quantity;
+          itemsHtml += `
+            <div class="order-item-row">
+              <span class="name">${item.name}</span>
+              <span class="qty">× ${item.quantity}</span>
+              <span class="price">₹${lineTotal.toLocaleString('en-IN')}</span>
+            </div>
+          `;
+        });
+
+        // Mini timeline
+        const currentIdx = STATUS_STEPS.indexOf(order.orderStatus);
+        let timelineHtml = '';
+        if (order.orderStatus !== 'cancelled') {
+          STATUS_STEPS.forEach((step, i) => {
+            let cls = '';
+            if (i < currentIdx) cls = 'done';
+            else if (i === currentIdx) cls = 'current done';
+
+            timelineHtml += `<div class="mini-step ${cls}"><div class="dot">${i <= currentIdx ? '✓' : ''}</div>${STATUS_LABELS[step]}</div>`;
+            if (i < STATUS_STEPS.length - 1) {
+              timelineHtml += `<div class="mini-step-line ${i < currentIdx ? 'done' : ''}"></div>`;
+            }
+          });
+        } else {
+          timelineHtml = '<div style="color:#e53935;font-size:0.85rem;font-weight:600;padding:0.5rem 0;"><i class="fas fa-times-circle"></i> Order Cancelled</div>';
+        }
+
+        html += `
+          <div class="order-card">
+            <div class="order-card-header">
+              <div>
+                <span class="order-id">${order.orderId}</span>
+                <span class="order-date" style="margin-left:0.8rem;">${date}</span>
+              </div>
+              <span class="status-badge ${order.orderStatus}">${order.orderStatus.replace(/_/g, ' ')}</span>
+            </div>
+            <div class="order-card-body">
+              <div class="order-items-list">${itemsHtml}</div>
+              <div class="mini-timeline">${timelineHtml}</div>
+            </div>
+            <div class="order-card-footer">
+              <span class="order-total">₹${order.totalAmount.toLocaleString('en-IN')}</span>
+              <a href="order-tracking.html?id=${order.orderId}" class="track-link"><i class="fas fa-map-marker-alt"></i> Track Order</a>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+
+    } catch (error) {
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-wifi" style="color:#e0e0e0;"></i><h2>Connection Error</h2><p>Unable to connect to the server. Please check your connection and try again.</p></div>';
+    }
+  }
+
+  loadOrders();
+</script>
+</body>
+</html>

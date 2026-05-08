@@ -1,0 +1,372 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Track Order - EcoWorld.earth</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="stylesheet" href="assets/css/fontawesome-all.min.css" />
+<link rel="stylesheet" href="assets/css/marketplace.css" />
+<style>
+  .track-page { max-width: 700px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* Search Box */
+  .track-search {
+    background: #fff; border: 1px solid #e8f5e9; border-radius: 14px;
+    padding: 2rem; text-align: center; margin-bottom: 2rem;
+  }
+  .track-search h1 { font-size: 1.8rem; color: #1b5e20; font-weight: 700; margin-bottom: 0.5rem; }
+  .track-search p { font-size: 0.9rem; color: #666; margin-bottom: 1.5rem; }
+  .search-row { display: flex; gap: 0.5rem; max-width: 400px; margin: 0 auto; }
+  .search-row input {
+    flex: 1; padding: 0.8rem 1rem; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 0.95rem; font-family: monospace; text-transform: uppercase;
+    color: #333; letter-spacing: 0.5px;
+  }
+  .search-row input:focus { outline: none; border-color: #4CAF50; box-shadow: 0 0 0 3px rgba(76,175,80,0.1); }
+  .search-row button {
+    padding: 0.8rem 1.5rem; background: #2e7d32; color: #fff;
+    border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
+    transition: all 0.3s; white-space: nowrap;
+  }
+  .search-row button:hover { background: #1b5e20; }
+
+  /* Order Card */
+  .order-card {
+    background: #fff; border: 1px solid #e8f5e9; border-radius: 14px;
+    padding: 2rem; display: none;
+  }
+  .order-card.visible { display: block; }
+  .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
+  .order-header h2 { font-size: 1.2rem; color: #333; font-weight: 700; }
+  .order-header h2 span { color: #1b5e20; font-family: monospace; }
+  .status-badge {
+    padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.78rem;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .status-badge.placed { background: #fff3e0; color: #e65100; }
+  .status-badge.confirmed { background: #e3f2fd; color: #1565c0; }
+  .status-badge.processing { background: #f3e5f5; color: #7b1fa2; }
+  .status-badge.shipped { background: #e8f5e9; color: #2e7d32; }
+  .status-badge.out_for_delivery { background: #e8f5e9; color: #1b5e20; }
+  .status-badge.delivered { background: #e8f5e9; color: #2e7d32; }
+  .status-badge.cancelled { background: #ffebee; color: #e53935; }
+
+  /* Timeline */
+  .timeline { position: relative; margin: 2rem 0; padding-left: 2rem; }
+  .timeline::before {
+    content: ''; position: absolute; left: 11px; top: 0; bottom: 0;
+    width: 3px; background: #e8f5e9; border-radius: 3px;
+  }
+  .timeline-item { position: relative; padding-bottom: 1.5rem; }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-dot {
+    position: absolute; left: -2rem; top: 2px;
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 3px solid #e0e0e0; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .timeline-dot.active { border-color: #2e7d32; background: #2e7d32; }
+  .timeline-dot.active i { color: #fff; font-size: 0.6rem; }
+  .timeline-dot.current { border-color: #2e7d32; background: #fff; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(46,125,50,0.3); } 50% { box-shadow: 0 0 0 8px rgba(46,125,50,0); } }
+  .timeline-content h4 { font-size: 0.9rem; color: #333; font-weight: 600; margin-bottom: 0.2rem; }
+  .timeline-content p { font-size: 0.8rem; color: #888; }
+
+  /* Order Details */
+  .order-details { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #f0f0f0; }
+  .order-details h3 { font-size: 0.95rem; color: #333; font-weight: 700; margin-bottom: 0.8rem; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  .detail-item { font-size: 0.85rem; }
+  .detail-item .label { color: #888; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.2rem; }
+  .detail-item .value { color: #333; font-weight: 600; }
+
+  .order-items { margin-top: 1.5rem; }
+  .order-items h3 { font-size: 0.95rem; color: #333; font-weight: 700; margin-bottom: 0.8rem; }
+  .order-item-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.6rem 0; border-bottom: 1px solid #f5f5f5; font-size: 0.88rem;
+  }
+  .order-item-row:last-child { border-bottom: none; }
+  .order-item-row .item-name { color: #333; }
+  .order-item-row .item-qty { color: #888; }
+  .order-item-row .item-price { font-weight: 600; color: #2e7d32; }
+
+  /* Error */
+  .track-error {
+    text-align: center; padding: 2rem; display: none;
+  }
+  .track-error.visible { display: block; }
+  .track-error i { font-size: 3rem; color: #e0e0e0; margin-bottom: 1rem; }
+  .track-error p { color: #888; font-size: 0.95rem; }
+
+  /* Loading */
+  .track-loading { text-align: center; padding: 2rem; display: none; }
+  .track-loading.visible { display: block; }
+  .track-loading .spinner {
+    width: 36px; height: 36px; border: 4px solid #e8f5e9;
+    border-top-color: #2e7d32; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .order-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Eco<span>World</span>.earth</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="dashboard.html" id="navAccount"><i class="fas fa-user-circle"></i> Account</a></li>
+    <li class="nav-cart"><a href="cart.html"><i class="fas fa-shopping-cart"></i><span class="cart-count" id="cartCount">0</span></a></li>
+  </ul>
+</nav>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb" style="padding-top:5rem;">
+  <a href="index.html">Home</a><span class="sep">/</span>
+  <span>Track Order</span>
+</div>
+
+<!-- Track Page -->
+<div class="track-page">
+
+  <!-- Search -->
+  <div class="track-search">
+    <h1><i class="fas fa-shipping-fast" style="color:#4CAF50;"></i> Track Your Order</h1>
+    <p>Enter your order ID to check delivery status</p>
+    <div class="search-row">
+      <input type="text" id="orderIdInput" placeholder="e.g. ECO2605123456" maxlength="20">
+      <button onclick="trackOrder()"><i class="fas fa-search"></i> Track</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="track-loading" id="trackLoading">
+    <div class="spinner"></div>
+    <p style="color:#888;">Looking up your order...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="track-error" id="trackError">
+    <i class="fas fa-search"></i>
+    <p id="errorMsg">Order not found. Please check the order ID and try again.</p>
+  </div>
+
+  <!-- Order Card -->
+  <div class="order-card" id="orderCard">
+    <div class="order-header">
+      <h2>Order <span id="displayOrderId"></span></h2>
+      <span class="status-badge" id="statusBadge"></span>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline" id="timeline"></div>
+
+    <!-- Details -->
+    <div class="order-details">
+      <h3>Order Details</h3>
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+
+    <!-- Items -->
+    <div class="order-items">
+      <h3>Items Ordered</h3>
+      <div id="itemsList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div>
+    <a href="products.html">Products</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+    <a href="privacy-policy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </div>
+  <p class="footer-copy">&copy; 2026 EcoWorld Earth Products. All rights reserved.</p>
+</footer>
+
+<script src="assets/js/products-data.js"></script>
+<script src="assets/js/auth-nav.js"></script>
+<script>
+  const API_BASE = 'https://your-backend.onrender.com/api'; // Change after deploying
+
+  const STATUS_STEPS = [
+    { key: 'placed', label: 'Order Placed', icon: 'fas fa-receipt' },
+    { key: 'confirmed', label: 'Confirmed', icon: 'fas fa-check' },
+    { key: 'processing', label: 'Processing', icon: 'fas fa-cog' },
+    { key: 'shipped', label: 'Shipped', icon: 'fas fa-truck' },
+    { key: 'out_for_delivery', label: 'Out for Delivery', icon: 'fas fa-motorcycle' },
+    { key: 'delivered', label: 'Delivered', icon: 'fas fa-box-open' }
+  ];
+
+  // Check URL params on load
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (id) {
+      document.getElementById('orderIdInput').value = id;
+      trackOrder();
+    }
+    updateNavCartBadge();
+  });
+
+  async function trackOrder() {
+    const orderId = document.getElementById('orderIdInput').value.trim().toUpperCase();
+    if (!orderId) {
+      alert('Please enter an order ID');
+      return;
+    }
+
+    // UI states
+    document.getElementById('orderCard').classList.remove('visible');
+    document.getElementById('trackError').classList.remove('visible');
+    document.getElementById('trackLoading').classList.add('visible');
+
+    try {
+      const res = await fetch(`${API_BASE}/orders/track/${encodeURIComponent(orderId)}`);
+      const data = await res.json();
+
+      document.getElementById('trackLoading').classList.remove('visible');
+
+      if (!data.success) {
+        document.getElementById('errorMsg').textContent = data.message || 'Order not found.';
+        document.getElementById('trackError').classList.add('visible');
+        return;
+      }
+
+      renderOrderCard(data.order);
+
+    } catch (error) {
+      document.getElementById('trackLoading').classList.remove('visible');
+      document.getElementById('errorMsg').textContent = 'Unable to connect. Please try again later.';
+      document.getElementById('trackError').classList.add('visible');
+    }
+  }
+
+  // Allow Enter key
+  document.getElementById('orderIdInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') trackOrder();
+  });
+
+  function renderOrderCard(order) {
+    // Header
+    document.getElementById('displayOrderId').textContent = order.orderId;
+    const badge = document.getElementById('statusBadge');
+    badge.textContent = order.orderStatus.replace(/_/g, ' ');
+    badge.className = 'status-badge ' + order.orderStatus;
+
+    // Timeline
+    renderTimeline(order.orderStatus, order.statusHistory);
+
+    // Details
+    const placedDate = new Date(order.placedAt).toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    let estDelivery = 'Will be updated soon';
+    if (order.estimatedDelivery) {
+      estDelivery = new Date(order.estimatedDelivery).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      });
+    }
+
+    document.getElementById('detailGrid').innerHTML = `
+      <div class="detail-item"><div class="label">Placed On</div><div class="value">${placedDate}</div></div>
+      <div class="detail-item"><div class="label">Estimated Delivery</div><div class="value">${estDelivery}</div></div>
+      <div class="detail-item"><div class="label">Customer</div><div class="value">${order.customerName}</div></div>
+      <div class="detail-item"><div class="label">City</div><div class="value">${order.city}</div></div>
+      <div class="detail-item"><div class="label">Payment</div><div class="value">${order.paymentStatus}</div></div>
+      ${order.trackingNumber ? `<div class="detail-item"><div class="label">Tracking #</div><div class="value">${order.trackingNumber}</div></div>` : ''}
+    `;
+
+    // Items
+    let itemsHtml = '';
+    let total = 0;
+    order.items.forEach(item => {
+      const lineTotal = item.price * item.quantity;
+      total += lineTotal;
+      itemsHtml += `
+        <div class="order-item-row">
+          <span class="item-name">${item.name}</span>
+          <span class="item-qty">x${item.quantity}</span>
+          <span class="item-price">\u20B9${lineTotal.toLocaleString('en-IN')}</span>
+        </div>
+      `;
+    });
+    itemsHtml += `
+      <div class="order-item-row" style="border-top:2px solid #e8f5e9;padding-top:0.8rem;margin-top:0.5rem;">
+        <span class="item-name" style="font-weight:700;">Total</span>
+        <span></span>
+        <span class="item-price" style="font-size:1rem;">\u20B9${order.totalAmount.toLocaleString('en-IN')}</span>
+      </div>
+    `;
+    document.getElementById('itemsList').innerHTML = itemsHtml;
+
+    // Show card
+    document.getElementById('orderCard').classList.add('visible');
+  }
+
+  function renderTimeline(currentStatus, history) {
+    const container = document.getElementById('timeline');
+
+    if (currentStatus === 'cancelled') {
+      container.innerHTML = `
+        <div class="timeline-item">
+          <div class="timeline-dot active"><i class="fas fa-times" style="color:#fff;font-size:0.6rem;"></i></div>
+          <div class="timeline-content">
+            <h4 style="color:#e53935;">Order Cancelled</h4>
+            <p>${history.length > 0 ? history[history.length - 1].note || 'Order was cancelled' : 'Order was cancelled'}</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const currentIdx = STATUS_STEPS.findIndex(s => s.key === currentStatus);
+    let html = '';
+
+    STATUS_STEPS.forEach((step, i) => {
+      const historyEntry = history.find(h => h.status === step.key);
+      const time = historyEntry ? new Date(historyEntry.timestamp).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+      }) : '';
+
+      let dotClass = 'timeline-dot';
+      if (i < currentIdx) dotClass += ' active';
+      else if (i === currentIdx) dotClass += ' current';
+
+      html += `
+        <div class="timeline-item">
+          <div class="${dotClass}">
+            ${i <= currentIdx ? `<i class="${step.icon}" style="font-size:0.55rem;${i < currentIdx ? 'color:#fff;' : 'color:#2e7d32;'}"></i>` : ''}
+          </div>
+          <div class="timeline-content">
+            <h4 style="${i <= currentIdx ? '' : 'color:#bbb;'}">${step.label}</h4>
+            <p>${time || (i <= currentIdx ? '' : 'Pending')}</p>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+</script>
+</body>
+</html>
