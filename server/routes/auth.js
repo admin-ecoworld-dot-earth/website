@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { sendWelcomeEmail, sendNewUserNotification } = require('../utils/email');
 
 const router = express.Router();
 
@@ -35,6 +36,10 @@ router.post('/register', async (req, res) => {
     });
 
     const token = generateToken(user._id);
+
+    // Send welcome email to user + notify admin
+    sendWelcomeEmail({ name: user.name, email: user.email });
+    sendNewUserNotification({ name: user.name, email: user.email });
 
     res.status(201).json({
       success: true,

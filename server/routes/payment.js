@@ -5,7 +5,7 @@ const Order = require('../models/Order');
 const Payment = require('../models/Payment');
 const { validateOrder, validatePaymentVerify } = require('../middleware/validate');
 const optionalAuth = require('../middleware/optionalAuth');
-const { sendOrderConfirmation, sendOrderFailed } = require('../utils/email');
+const { sendOrderConfirmation, sendOrderFailed, sendOrderNotificationToAdmin } = require('../utils/email');
 
 const router = express.Router();
 
@@ -46,8 +46,9 @@ router.post('/create-order', optionalAuth, validateOrder, async (req, res) => {
         statusHistory: [{ status: 'placed', note: 'Order placed with COD' }]
       });
 
-      // Send confirmation email
+      // Send confirmation email + notify admin
       sendOrderConfirmation(order);
+      sendOrderNotificationToAdmin(order);
 
       return res.status(201).json({
         success: true,
@@ -165,8 +166,9 @@ router.post('/verify', validatePaymentVerify, async (req, res) => {
       { new: true }
     );
 
-    // Send confirmation email
+    // Send confirmation email + notify admin
     sendOrderConfirmation(order);
+    sendOrderNotificationToAdmin(order);
 
     res.json({
       success: true,

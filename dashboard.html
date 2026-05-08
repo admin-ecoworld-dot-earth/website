@@ -222,9 +222,6 @@
       <a href="#" class="sidebar-link active" onclick="showSection('overview', this)">
         <i class="fas fa-th-large"></i> Dashboard
       </a>
-      <a href="#" class="sidebar-link" onclick="showSection('products', this)">
-        <i class="fas fa-shopping-bag"></i> Browse Products
-      </a>
       <a href="#" class="sidebar-link" onclick="showSection('orders', this)">
         <i class="fas fa-box"></i> My Orders
       </a>
@@ -260,16 +257,12 @@
           <div class="stat-icon orange"><i class="fas fa-check-circle"></i></div>
           <div class="stat-info"><h3 id="statDelivered">-</h3><p>Delivered</p></div>
         </a>
-        <a class="stat-card" onclick="showSection('products', document.querySelector('[onclick*=products]'))">
-          <div class="stat-icon purple"><i class="fas fa-store"></i></div>
-          <div class="stat-info"><h3 id="statProducts">-</h3><p>Products</p></div>
-        </a>
       </div>
 
       <div class="dash-section">
         <h2>Quick Actions</h2>
         <div class="action-grid">
-          <a class="action-card" onclick="showSection('products', document.querySelector('[onclick*=products]'))">
+          <a class="action-card" href="products.html">
             <i class="fas fa-shopping-bag"></i>
             <h3>Browse Products</h3>
             <p>Explore eco-friendly products</p>
@@ -297,16 +290,6 @@
         <div class="recent-orders-table" id="recentOrdersTable">
           <div class="no-data"><i class="fas fa-box-open" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>No orders yet</div>
         </div>
-      </div>
-    </div>
-
-    <!-- SECTION: Products -->
-    <div class="dash-content" id="section-products" style="display:none;">
-      <h2 style="font-size:1.3rem;color:#1b5e20;font-weight:700;margin-bottom:1.5rem;">
-        <i class="fas fa-shopping-bag"></i> Browse Products
-      </h2>
-      <div class="products-grid visible" id="productsGrid">
-        <div class="no-data" style="grid-column:1/-1;">Loading products...</div>
       </div>
     </div>
 
@@ -405,7 +388,6 @@
     document.getElementById('mobileOverlay').classList.remove('active');
 
     if (section === 'orders') loadOrders();
-    if (section === 'products') loadProducts();
     if (section === 'overview') loadDashboardStats();
   }
 
@@ -454,77 +436,6 @@
     } catch (e) {
       console.error('Dashboard stats error:', e);
     }
-
-    // Products count
-    try {
-      const res = await fetch(`${API_BASE}/products`);
-      const data = await res.json();
-      if (data.success) document.getElementById('statProducts').textContent = data.products.length;
-    } catch (e) { /* ignore */ }
-  }
-
-  // === LOAD PRODUCTS ===
-  async function loadProducts() {
-    const grid = document.getElementById('productsGrid');
-    try {
-      const res = await fetch(`${API_BASE}/products`);
-      const data = await res.json();
-
-      if (!data.success || data.products.length === 0) {
-        grid.innerHTML = '<div class="no-data" style="grid-column:1/-1;"><i class="fas fa-store" style="font-size:2rem;display:block;margin-bottom:0.5rem;color:#c8e6c9;"></i>No products available right now</div>';
-        return;
-      }
-
-      let html = '';
-      data.products.forEach(product => {
-        html += `
-          <div class="prod-card">
-            <div class="prod-thumb"><i class="${product.icon || 'fas fa-box'}"></i></div>
-            <div class="prod-info">
-              <h3>${product.name}</h3>
-              <div class="prod-price">₹${product.price.toLocaleString('en-IN')}</div>
-              <button class="buy-now-btn" onclick="buyNow(event, '${product._id}', '${product.name.replace(/'/g, "\\'") }', ${product.price})">
-                <i class="fas fa-bolt"></i> Buy Now
-              </button>
-            </div>
-          </div>
-        `;
-      });
-      grid.innerHTML = html;
-    } catch (error) {
-      grid.innerHTML = '<div class="no-data" style="grid-column:1/-1;">Failed to load products. Check connection.</div>';
-    }
-  }
-
-  // === BUY NOW ===
-  async function buyNow(e, productId, productName, price) {
-    if (!confirm(`Buy "${productName}" for ₹${price.toLocaleString('en-IN')}?`)) return;
-
-    const btn = e.target.closest('.buy-now-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing...';
-
-    try {
-      const res = await fetch(`${API_BASE}/user-orders`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ productId, productName: productName, price, quantity: 1 })
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        alert(`Order placed! Your Order ID: ${data.orderId}`);
-        showSection('orders', document.querySelector('[onclick*=orders]'));
-      } else {
-        alert(data.message || 'Failed to place order');
-      }
-    } catch (error) {
-      alert('Connection failed. Please try again.');
-    }
-
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-bolt"></i> Buy Now';
   }
 
   // === LOAD ORDERS ===
@@ -546,7 +457,7 @@
           <div class="no-data" style="padding:3rem;">
             <i class="fas fa-box-open" style="font-size:3rem;display:block;margin-bottom:1rem;color:#c8e6c9;"></i>
             <p style="font-size:1rem;color:#888;margin-bottom:1rem;">No orders yet</p>
-            <a onclick="showSection('products', document.querySelector('[onclick*=products]'))" style="color:#2e7d32;font-weight:600;cursor:pointer;">Browse Products →</a>
+            <a href="products.html" style="color:#2e7d32;font-weight:600;cursor:pointer;">Browse Products →</a>
           </div>
         `;
         return;
