@@ -262,7 +262,7 @@
             <input type="tel" id="custPhone" placeholder="Phone Number *">
           </div>
           <div class="info-row full">
-            <input type="email" id="custEmail" placeholder="Email (optional)">
+            <input type="email" id="custEmail" placeholder="Email *" required>
           </div>
           <div class="info-row full">
             <textarea id="custAddress" placeholder="Delivery Address *"></textarea>
@@ -325,6 +325,19 @@
   const API_BASE = 'https://ecoworld-web-service.onrender.com/api';
 
   let selectedPayMethod = 'razorpay';
+
+  // Auto-fill email from logged-in user
+  (function() {
+    const user = JSON.parse(localStorage.getItem('ecoUser') || 'null');
+    if (user && user.email) {
+      const emailField = document.getElementById('custEmail');
+      if (emailField) emailField.value = user.email;
+    }
+    if (user && user.name) {
+      const nameField = document.getElementById('custName');
+      if (nameField) nameField.value = user.name;
+    }
+  })();
 
   // === CART RENDERING ===
   function renderCart() {
@@ -475,8 +488,12 @@
     const pincode = document.getElementById('custPincode').value.trim();
 
     // Validation
-    if (!name || !phone || !address || !city || !pincode) {
-      alert('Please fill in all required delivery details.');
+    if (!name || !phone || !email || !address || !city || !pincode) {
+      alert('Please fill in all required details including email.');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      alert('Please enter a valid email address.');
       return;
     }
     if (phone.replace(/[^0-9]/g, '').length < 10) {
