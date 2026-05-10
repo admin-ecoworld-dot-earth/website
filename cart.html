@@ -359,11 +359,18 @@
     let itemsHtml = '';
     let itemCount = 0;
     let totalPrice = 0;
+    let totalGst = 0;
+    let totalWeightKg = 0;
+    let totalTransport = 0;
+    let hasTransportItems = false;
+    let freeTransportThreshold = 0;
+    let moqErrors = [];
 
     cart.forEach((item, index) => {
       const productInfo = getProductById(item.productId);
       const name = productInfo ? productInfo.product.name : item.productId;
       const icon = productInfo ? productInfo.category.icon : 'fas fa-box';
+      const prod = productInfo ? productInfo.product : null;
 
       let variantHtml = '';
       if (item.variants && Object.keys(item.variants).length > 0) {
@@ -372,8 +379,58 @@
         ).join('');
       }
 
+      // Weight / quantity info
+      let weightInfo = '';
+      const itemWeightKg = prod && prod.unitWeight ? item.quantity * prod.unitWeight : 0;
+      if (prod && prod.priceTable) {
+        const ulabel = prod.unitLabel || '1000 pcs';
+        weightInfo = `<div style="font-size:0.75rem;color:#777;margin-top:0.2rem;">${item.quantity} × ${ulabel}</div>`;
+      } else if (prod && prod.unitWeight) {
+        weightInfo = `<div style="font-size:0.75rem;color:#777;margin-top:0.2rem;">${item.quantity} unit${item.quantity > 1 ? 's' : ''} × ${prod.unitWeight} ${prod.unitLabel || 'kg'} = ${itemWeightKg} ${prod.unitLabel || 'kg'}</div>`;
+        totalWeightKg += itemWeightKg;
+      }
+      if (prod && prod.transportPerKg) {
+        hasTransportItems = true;
+        freeTransportThreshold = Math.max(freeTransportThreshold, prod.freeTransportAboveKg || 0);
+      }
+      if (prod && prod.transportPerUnit) {
+        hasTransportItems = true;
+        const unitFreeThreshold = prod.freeTransportAboveUnits || 0;
+        if (unitFreeThreshold > 0 && item.quantity >= unitFreeThreshold) {
+          // Free transport for this item
+        } else {
+          totalTransport += prod.transportPerUnit * item.quantity;
+        }
+      }
+
+      // Recalculate correct unit price from product data (fixes stale cart entries)
+      if (prod) {
+        let correctUnitPrice = 0;
+        if (prod.priceTable) {
+          // For priceTable products, look up price from selected variants
+          const variantKeys = Object.keys(prod.variants || {});
+          const keyParts = variantKeys.map(k => (item.variants && item.variants[k]) || '');
+          let key = keyParts.join('|');
+          correctUnitPrice = prod.priceTable[key] || 0;
+          if (correctUnitPrice === 0 && keyParts.length === 1) {
+            correctUnitPrice = prod.priceTable[keyParts[0]] || 0;
+          }
+        } else if (prod.unitWeight) {
+          correctUnitPrice = prod.basePrice * prod.unitWeight;
+        }
+        if (correctUnitPrice > 0 && item.price !== correctUnitPrice) {
+          item.price = correctUnitPrice;
+          const cart2 = getCart();
+          cart2[index].price = correctUnitPrice;
+          saveCart(cart2);
+        }
+      }
+
       const lineTotal = item.price * item.quantity;
+      const gstPercent = prod && prod.gstPercent ? prod.gstPercent : 0;
+      const lineGst = Math.round(lineTotal * gstPercent / 100);
       totalPrice += lineTotal;
+      totalGst += lineGst;
       itemCount += item.quantity;
 
       itemsHtml += `
@@ -382,6 +439,7 @@
           <div class="cart-item-info">
             <h3>${name}</h3>
             <div class="cart-item-variants">${variantHtml}</div>
+            ${weightInfo}
             <div class="cart-item-qty">
               <button onclick="changeQty(${index}, -1)">-</button>
               <input type="number" value="${item.quantity}" min="1" onchange="setQty(${index}, this.value)">
@@ -390,11 +448,66 @@
           </div>
           <div class="cart-item-right">
             <div class="cart-item-price">${item.price > 0 ? '\u20B9' + lineTotal.toLocaleString('en-IN') : 'Quote'}</div>
+            ${gstPercent > 0 ? `<div style="font-size:0.7rem;color:#888;">+ ${gstPercent}% GST</div>` : ''}
             <button class="cart-item-remove" onclick="removeItem(${index})"><i class="fas fa-trash-alt"></i></button>
           </div>
         </div>
       `;
+
+      // MOQ validation
+      if (prod && prod.minQty && item.quantity < prod.minQty) {
+        moqErrors.push({
+          name: name,
+          current: item.quantity,
+          required: prod.minQty,
+          reason: prod.minQtyReason || `Minimum order: ${prod.minQty} unit${prod.minQty > 1 ? 's' : ''}`
+        });
+      }
     });
+
+    // Transport calculation: ₹6/kg (weight-based, FREE if > threshold) + ₹/unit (per-unit)
+    const transportFree = freeTransportThreshold > 0 && totalWeightKg > freeTransportThreshold;
+    if (hasTransportItems && !transportFree && totalWeightKg > 0) {
+      totalTransport += totalWeightKg * 6;
+    }
+
+    // FREE transport if order subtotal >= ₹15,000
+    const freeByOrderValue = totalPrice >= 15000;
+    if (freeByOrderValue) {
+      totalTransport = 0;
+    }
+
+    const grandTotal = totalPrice + totalGst + totalTransport;
+
+    // Transport line HTML
+    let transportHtml = '';
+    if (hasTransportItems) {
+      if (freeByOrderValue) {
+        transportHtml = `<div class="summary-line"><span>Transport / Shipping</span><span style="color:#2e7d32;font-weight:600;">FREE</span></div>
+        <div style="font-size:0.75rem;color:#2e7d32;text-align:right;margin-top:-0.3rem;padding-bottom:0.4rem;"><i class="fas fa-gift"></i> Free shipping on orders above ₹15,000!</div>`;
+      } else if (transportFree && totalTransport === 0) {
+        transportHtml = `<div class="summary-line"><span>Transport (${totalWeightKg} kg)</span><span style="color:#2e7d32;font-weight:600;">FREE</span></div>`;
+      } else if (totalTransport > 0) {
+        transportHtml = `<div class="summary-line"><span>Transport / Shipping</span><span>₹${totalTransport.toLocaleString('en-IN')}</span></div>`;
+        const amountToFree = 15000 - totalPrice;
+        if (amountToFree > 0) {
+          transportHtml += `<div style="font-size:0.75rem;color:#2e7d32;text-align:right;margin-top:-0.3rem;padding-bottom:0.4rem;"><i class="fas fa-info-circle"></i> Add ₹${amountToFree.toLocaleString('en-IN')} more for FREE shipping!</div>`;
+        }
+      }
+    }
+
+    // MOQ error banner
+    const hasMoqError = moqErrors.length > 0;
+    let moqHtml = '';
+    if (hasMoqError) {
+      moqHtml = `<div style="background:#fff3e0;border:1px solid #ff9800;border-radius:8px;padding:0.8rem 1rem;margin-bottom:1rem;">
+        <div style="color:#e65100;font-weight:700;margin-bottom:0.4rem;"><i class="fas fa-exclamation-triangle"></i> Minimum Order Not Met</div>
+        ${moqErrors.map(e => `<div style="font-size:0.85rem;color:#555;margin-top:0.2rem;">
+          <strong>${e.name}</strong>: You have ${e.current} unit${e.current > 1 ? 's' : ''}, need at least ${e.required} units.<br>
+          <span style="font-size:0.8rem;color:#888;">${e.reason}</span>
+        </div>`).join('')}
+      </div>`;
+    }
 
     container.innerHTML = `
       <h1>Your Cart (${itemCount} item${itemCount > 1 ? 's' : ''})</h1>
@@ -402,10 +515,13 @@
         <div class="cart-items">${itemsHtml}</div>
         <div class="cart-summary">
           <h2>Order Summary</h2>
+          ${moqHtml}
           <div class="summary-line"><span>Items</span><span>${itemCount}</span></div>
           <div class="summary-line"><span>Subtotal</span><span>\u20B9${totalPrice.toLocaleString('en-IN')}</span></div>
-          <div class="summary-line total"><span>Total</span><span>\u20B9${totalPrice.toLocaleString('en-IN')}</span></div>
-          <button class="checkout-btn" onclick="openCheckout()"><i class="fas fa-lock"></i> Proceed to Checkout</button>
+          ${totalGst > 0 ? `<div class="summary-line"><span>GST (18%)</span><span>\u20B9${totalGst.toLocaleString('en-IN')}</span></div>` : ''}
+          ${transportHtml}
+          <div class="summary-line total"><span>Total</span><span>\u20B9${grandTotal.toLocaleString('en-IN')}</span></div>
+          <button class="checkout-btn${hasMoqError ? ' disabled' : ''}" onclick="${hasMoqError ? 'return false' : 'openCheckout()'}" ${hasMoqError ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}><i class="fas fa-lock"></i> Proceed to Checkout</button>
           <button class="clear-cart-btn" onclick="clearCartAction()"><i class="fas fa-trash"></i> Clear Cart</button>
         </div>
       </div>
@@ -512,21 +628,59 @@
     }
 
     const cart = getCart();
+    let orderSubtotal = 0;
+    let orderGst = 0;
+    let orderTransport = 0;
     const items = cart.map(item => {
       const info = getProductById(item.productId);
+      const prod = info ? info.product : null;
+      const lineTotal = item.price * item.quantity;
+      const gstPercent = prod && prod.gstPercent ? prod.gstPercent : 0;
+      const lineGst = Math.round(lineTotal * gstPercent / 100);
+      orderSubtotal += lineTotal;
+      orderGst += lineGst;
+
+      // Transport calculation per item
+      if (prod && prod.transportPerUnit) {
+        const unitFreeThreshold = prod.freeTransportAboveUnits || 0;
+        if (!(unitFreeThreshold > 0 && item.quantity >= unitFreeThreshold)) {
+          orderTransport += prod.transportPerUnit * item.quantity;
+        }
+      }
+      if (prod && prod.transportPerKg && prod.unitWeight) {
+        const itemKg = item.quantity * prod.unitWeight;
+        const freeAbove = prod.freeTransportAboveKg || 0;
+        if (!(freeAbove > 0 && itemKg > freeAbove)) {
+          orderTransport += itemKg * prod.transportPerKg;
+        }
+      }
+
       return {
         productId: item.productId,
         name: info ? info.product.name : item.productId,
         price: item.price,
         quantity: item.quantity,
         variants: item.variants || {},
-        sellerId: item.sellerId || 'ecoworld'
+        sellerId: item.sellerId || 'ecoworld',
+        unitWeight: prod && prod.unitWeight ? prod.unitWeight : null,
+        unitLabel: prod && prod.unitLabel ? prod.unitLabel : null,
+        gstPercent: gstPercent,
+        gstAmount: lineGst
       };
     });
+
+    // FREE transport if order subtotal >= ₹15,000
+    if (orderSubtotal >= 15000) {
+      orderTransport = 0;
+    }
 
     const orderData = {
       customer: { name, phone, email, address, city, pincode },
       items,
+      subtotal: orderSubtotal,
+      gstTotal: orderGst,
+      transportTotal: orderTransport,
+      total: orderSubtotal + orderGst + orderTransport,
       paymentMethod: selectedPayMethod
     };
 

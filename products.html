@@ -67,7 +67,7 @@
   // Render category cards
   const grid = document.getElementById('categoryGrid');
   CATALOG.forEach(cat => {
-    const totalProducts = cat.subcategories.reduce((sum, sub) => sum + sub.products.length, 0);
+    const totalProducts = cat.subcategories.reduce((sum, sub) => sum + countProducts(sub), 0);
     grid.innerHTML += `
       <a href="category.html?cat=${cat.id}" class="card">
         <div class="card-image">

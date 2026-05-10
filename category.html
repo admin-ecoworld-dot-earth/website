@@ -83,8 +83,16 @@
     // Sub-category cards
     const grid = document.getElementById('subcategoryGrid');
     category.subcategories.forEach(sub => {
+      const hasNested = !!sub.subcategories;
+      const productCount = countProducts(sub);
+      const href = hasNested
+        ? `subcategory.html?cat=${catId}&sub=${sub.id}`
+        : `subcategory.html?cat=${catId}&sub=${sub.id}`;
+      const metaText = hasNested
+        ? `${sub.subcategories.length} types &middot; ${productCount} product${productCount > 1 ? 's' : ''}`
+        : `${productCount} product${productCount > 1 ? 's' : ''}`;
       grid.innerHTML += `
-        <a href="subcategory.html?cat=${catId}&sub=${sub.id}" class="card">
+        <a href="${href}" class="card">
           <div class="card-image">
             ${sub.image ? `<img src="${sub.image}" alt="${sub.name}">` : `<i class="${category.icon} placeholder-icon"></i>`}
           </div>
@@ -92,11 +100,11 @@
             <h3>${sub.name}</h3>
             <p>${sub.description}</p>
             <div class="card-meta">
-              <span class="product-count">${sub.products.length} product${sub.products.length > 1 ? 's' : ''}</span>
+              <span class="product-count">${metaText}</span>
             </div>
           </div>
           <div class="card-footer">
-            <span class="card-link">View Products <i class="fas fa-arrow-right"></i></span>
+            <span class="card-link">${hasNested ? 'Explore Types' : 'View Products'} <i class="fas fa-arrow-right"></i></span>
           </div>
         </a>
       `;
