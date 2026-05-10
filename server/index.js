@@ -18,7 +18,7 @@ connectDB();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: [process.env.FRONTEND_URL || 'http://localhost:3000', 'https://www.ecoworld.earth'],
+  origin: [process.env.FRONTEND_URL || 'http://localhost:3000', 'https://ecoworld.earth', 'https://www.ecoworld.earth'],
   methods: ['GET', 'POST', 'PATCH'],
   credentials: true
 }));
