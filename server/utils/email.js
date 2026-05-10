@@ -1,18 +1,23 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Zoho Mail SMTP transporter (Zoho Workplace Pro)
-const transporter = nodemailer.createTransport({
-  host: 'smtppro.zoho.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    minVersion: 'TLSv1.2'
+// Resend email client (HTTPS API — works on all hosting platforms)
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Helper to send email via Resend
+async function sendEmail({ to, subject, html }) {
+  if (!process.env.RESEND_API_KEY) {
+    console.error('EMAIL NOT SENT: RESEND_API_KEY env variable is not set');
+    return;
   }
-});
+  const { data, error } = await resend.emails.send({
+    from: 'EcoWorld.earth <sales@ecoworld.earth>',
+    to: [to],
+    subject,
+    html
+  });
+  if (error) throw new Error(error.message);
+  return data;
+}
 
 /**
  * Send order confirmation email with invoice
@@ -192,8 +197,7 @@ async function sendOrderConfirmation(order) {
     </div>`;
 
   try {
-    await transporter.sendMail({
-      from: `"EcoWorld.earth" <sales@ecoworld.earth>`,
+    await sendEmail({
       to: order.customer.email,
       subject: `Invoice #${order.orderId} - Order Confirmed | EcoWorld.earth`,
       html
@@ -228,8 +232,7 @@ async function sendOrderFailed(order, reason) {
     </div>`;
 
   try {
-    await transporter.sendMail({
-      from: `"EcoWorld.earth" <sales@ecoworld.earth>`,
+    await sendEmail({
       to: order.customer.email,
       subject: `Payment Failed - ${order.orderId} | EcoWorld.earth`,
       html
@@ -292,8 +295,7 @@ async function sendWelcomeEmail(user) {
     </div>`;
 
   try {
-    await transporter.sendMail({
-      from: `"EcoWorld.earth" <sales@ecoworld.earth>`,
+    await sendEmail({
       to: user.email,
       subject: `Welcome to EcoWorld.earth! 🌿`,
       html
@@ -325,8 +327,7 @@ async function sendNewUserNotification(user) {
     </div>`;
 
   try {
-    await transporter.sendMail({
-      from: `"EcoWorld System" <sales@ecoworld.earth>`,
+    await sendEmail({
       to: 'admin@ecoworld.earth',
       subject: `New User: ${user.name} (${user.email})`,
       html
@@ -425,8 +426,7 @@ async function sendOrderNotificationToAdmin(order) {
     </div>`;
 
   try {
-    await transporter.sendMail({
-      from: `"EcoWorld Orders" <sales@ecoworld.earth>`,
+    await sendEmail({
       to: 'admin@ecoworld.earth',
       subject: `🛒 New Order #${order.orderId} — ₹${order.totalAmount.toLocaleString('en-IN')} | ${order.customer.name}`,
       html
@@ -520,8 +520,7 @@ async function sendOrderStatusUpdate(order, newStatus, note) {
     </div>`;
 
   try {
-    await transporter.sendMail({
-      from: `"EcoWorld.earth" <sales@ecoworld.earth>`,
+    await sendEmail({
       to: order.customer.email,
       subject: `${info.icon} Order ${info.label} — #${order.orderId} | EcoWorld.earth`,
       html
