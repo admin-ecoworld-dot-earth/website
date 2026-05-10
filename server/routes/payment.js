@@ -4,7 +4,7 @@ const Razorpay = require('razorpay');
 const Order = require('../models/Order');
 const Payment = require('../models/Payment');
 const { validateOrder, validatePaymentVerify } = require('../middleware/validate');
-const optionalAuth = require('../middleware/optionalAuth');
+const auth = require('../middleware/auth');
 const { sendOrderConfirmation, sendOrderFailed, sendOrderNotificationToAdmin } = require('../utils/email');
 
 const router = express.Router();
@@ -17,10 +17,10 @@ const razorpay = new Razorpay({
 
 // POST /api/payment/create-order
 // Creates Razorpay order + stores pending order in DB
-router.post('/create-order', optionalAuth, validateOrder, async (req, res) => {
+router.post('/create-order', auth, validateOrder, async (req, res) => {
   try {
     const { customer, items, paymentMethod, subtotal, gstTotal, transportTotal } = req.body;
-    const userId = req.user ? req.user._id : null;
+    const userId = req.user._id;
 
     // Calculate total on server (never trust frontend total)
     const itemsTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);

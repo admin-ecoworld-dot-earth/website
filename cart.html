@@ -563,6 +563,16 @@
   // === CHECKOUT MODAL ===
   function openCheckout() {
     if (getCart().length === 0) return;
+
+    // Block checkout if not logged in
+    const user = JSON.parse(localStorage.getItem('ecoUser') || 'null');
+    const token = localStorage.getItem('ecoToken');
+    if (!user || !token) {
+      alert('Please register or login to place an order.');
+      window.location.href = 'login.html';
+      return;
+    }
+
     document.getElementById('checkoutStep1').style.display = 'block';
     document.getElementById('checkoutStep2').style.display = 'none';
     document.getElementById('modalTitle').textContent = 'Checkout';

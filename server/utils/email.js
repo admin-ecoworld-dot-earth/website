@@ -18,7 +18,14 @@ const transporter = nodemailer.createTransport({
  * Send order confirmation email with invoice
  */
 async function sendOrderConfirmation(order) {
-  if (!process.env.EMAIL_USER || !order.customer.email) return;
+  if (!process.env.EMAIL_USER) {
+    console.error('EMAIL NOT SENT: EMAIL_USER env variable is not set');
+    return;
+  }
+  if (!order.customer.email) {
+    console.error('EMAIL NOT SENT: Customer email is missing for order', order.orderId);
+    return;
+  }
 
   const invoiceNo = order.orderId;
   const orderDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -333,7 +340,10 @@ async function sendNewUserNotification(user) {
  * Notify admin about new order with full details for dispatch
  */
 async function sendOrderNotificationToAdmin(order) {
-  if (!process.env.EMAIL_USER) return;
+  if (!process.env.EMAIL_USER) {
+    console.error('ADMIN EMAIL NOT SENT: EMAIL_USER env variable is not set');
+    return;
+  }
 
   const itemRows = order.items.map((item, i) =>
     `<tr>
