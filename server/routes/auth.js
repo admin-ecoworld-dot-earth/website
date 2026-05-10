@@ -44,7 +44,7 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       success: true,
       token,
-      user: { id: user._id, name: user.name, email: user.email }
+      user: { id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin || false }
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -76,7 +76,7 @@ router.post('/login', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user._id, name: user.name, email: user.email }
+      user: { id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin || false }
     });
   } catch (error) {
     console.error('Login error:', error);
