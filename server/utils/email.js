@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 
 // Zoho Mail SMTP transporter (port 587 + STARTTLS)
 const transporter = nodemailer.createTransport({
-  host: 'smtp.zoho.in',
+  host: 'smtp.zoho.com',
   port: 587,
   secure: false,
   auth: {
