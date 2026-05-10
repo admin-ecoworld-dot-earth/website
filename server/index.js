@@ -12,6 +12,9 @@ const userOrderRoutes = require('./routes/userOrders');
 
 const app = express();
 
+// Trust proxy (required for Render.com + express-rate-limit)
+app.set('trust proxy', 1);
+
 // Connect to MongoDB
 connectDB();
 
