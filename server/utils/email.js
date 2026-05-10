@@ -1,8 +1,8 @@
 const nodemailer = require('nodemailer');
 
-// Zoho Mail SMTP transporter (port 587 + STARTTLS)
+// Zoho Mail SMTP transporter (Zoho Workplace Pro)
 const transporter = nodemailer.createTransport({
-  host: 'smtp.zoho.com',
+  host: 'smtppro.zoho.com',
   port: 587,
   secure: false,
   auth: {
@@ -239,7 +239,7 @@ async function sendOrderFailed(order, reason) {
   }
 }
 
-module.exports = { sendOrderConfirmation, sendOrderFailed, sendWelcomeEmail, sendNewUserNotification, sendOrderNotificationToAdmin };
+module.exports = { sendOrderConfirmation, sendOrderFailed, sendWelcomeEmail, sendNewUserNotification, sendOrderNotificationToAdmin, sendOrderStatusUpdate };
 
 /**
  * Send welcome email to newly registered user
@@ -434,5 +434,100 @@ async function sendOrderNotificationToAdmin(order) {
     console.log(`Admin order notification sent for ${order.orderId}`);
   } catch (error) {
     console.error(`Admin order notification failed:`, error.message);
+  }
+}
+
+/**
+ * Send order status update email to customer
+ */
+async function sendOrderStatusUpdate(order, newStatus, note) {
+  if (!process.env.EMAIL_USER) {
+    console.error('STATUS EMAIL NOT SENT: EMAIL_USER env variable is not set');
+    return;
+  }
+  if (!order.customer.email) {
+    console.error('STATUS EMAIL NOT SENT: Customer email is missing for order', order.orderId);
+    return;
+  }
+
+  const statusInfo = {
+    confirmed: { icon: '✅', color: '#1565c0', bg: '#e3f2fd', label: 'Confirmed', msg: 'Your order has been confirmed and is being prepared.' },
+    processing: { icon: '⚙️', color: '#7b1fa2', bg: '#f3e5f5', label: 'Processing', msg: 'Your order is being processed and packed.' },
+    shipped: { icon: '🚚', color: '#2e7d32', bg: '#e8f5e9', label: 'Shipped', msg: 'Your order has been shipped and is on its way!' },
+    out_for_delivery: { icon: '📦', color: '#00695c', bg: '#e0f7fa', label: 'Out for Delivery', msg: 'Your order is out for delivery. It will arrive today!' },
+    delivered: { icon: '🎉', color: '#1b5e20', bg: '#c8e6c9', label: 'Delivered', msg: 'Your order has been delivered. Thank you for shopping with us!' },
+    cancelled: { icon: '❌', color: '#c62828', bg: '#ffebee', label: 'Cancelled', msg: 'Your order has been cancelled.' }
+  };
+
+  const info = statusInfo[newStatus] || { icon: '📋', color: '#333', bg: '#f5f5f5', label: newStatus, msg: 'Your order status has been updated.' };
+
+  const itemsList = order.items.map(i => `${i.name} × ${i.quantity}`).join(', ');
+
+  const html = `
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;">
+      <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);padding:24px;text-align:center;border-radius:8px 8px 0 0;">
+        <h1 style="color:#fff;margin:0;font-size:22px;">🌿 EcoWorld.earth</h1>
+        <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px;">Order Status Update</p>
+      </div>
+
+      <div style="padding:24px;">
+        <h2 style="color:#333;font-size:18px;margin:0 0 16px;">Hi ${order.customer.name},</h2>
+
+        <div style="background:${info.bg};border-left:4px solid ${info.color};padding:16px;border-radius:0 8px 8px 0;margin-bottom:20px;">
+          <p style="margin:0;font-size:24px;">${info.icon}</p>
+          <h3 style="color:${info.color};margin:8px 0 4px;font-size:16px;">Order ${info.label}</h3>
+          <p style="color:#555;margin:0;font-size:14px;">${info.msg}</p>
+        </div>
+
+        <div style="background:#f9f9f9;padding:16px;border-radius:8px;margin-bottom:20px;">
+          <table style="width:100%;font-size:14px;">
+            <tr>
+              <td style="color:#888;padding:4px 0;">Order ID:</td>
+              <td style="font-weight:700;color:#1b5e20;font-family:monospace;">${order.orderId}</td>
+            </tr>
+            <tr>
+              <td style="color:#888;padding:4px 0;">Items:</td>
+              <td>${itemsList}</td>
+            </tr>
+            <tr>
+              <td style="color:#888;padding:4px 0;">Total:</td>
+              <td style="font-weight:700;">₹${order.totalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+            </tr>
+            ${order.trackingNumber ? `<tr>
+              <td style="color:#888;padding:4px 0;">Tracking:</td>
+              <td style="font-weight:600;">${order.trackingNumber}</td>
+            </tr>` : ''}
+            ${order.estimatedDelivery ? `<tr>
+              <td style="color:#888;padding:4px 0;">Est. Delivery:</td>
+              <td>${new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+            </tr>` : ''}
+            ${note ? `<tr>
+              <td style="color:#888;padding:4px 0;">Note:</td>
+              <td>${note}</td>
+            </tr>` : ''}
+          </table>
+        </div>
+
+        <div style="text-align:center;margin:24px 0 12px;">
+          <a href="https://ecoworld.earth/order-tracking.html?id=${order.orderId}" style="display:inline-block;background:#2e7d32;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">Track Your Order</a>
+        </div>
+
+        <p style="color:#999;font-size:12px;text-align:center;margin-top:20px;">
+          Questions? Contact us on WhatsApp: +91 7204885759<br>
+          <a href="https://ecoworld.earth" style="color:#2e7d32;">ecoworld.earth</a>
+        </p>
+      </div>
+    </div>`;
+
+  try {
+    await transporter.sendMail({
+      from: `"EcoWorld.earth" <sales@ecoworld.earth>`,
+      to: order.customer.email,
+      subject: `${info.icon} Order ${info.label} — #${order.orderId} | EcoWorld.earth`,
+      html
+    });
+    console.log(`Status update email sent for ${order.orderId} → ${newStatus}`);
+  } catch (error) {
+    console.error(`Status update email failed for ${order.orderId}:`, error.message);
   }
 }

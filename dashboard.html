@@ -228,6 +228,9 @@
       <a href="#" class="sidebar-link" onclick="showSection('settings', this)">
         <i class="fas fa-cog"></i> Account Settings
       </a>
+      <a href="admin-orders.html" class="sidebar-link" id="adminLink" style="display:none;">
+        <i class="fas fa-clipboard-list"></i> Manage Orders
+      </a>
     </nav>
     <a href="#" class="sidebar-link logout" onclick="logoutUser()">
       <i class="fas fa-sign-out-alt"></i> Logout
@@ -375,6 +378,11 @@
     document.getElementById('settingsName').value = userData.name;
     document.getElementById('settingsEmail').value = userData.email;
     if (typeof updateNavCartBadge === 'function') updateNavCartBadge();
+    // Show admin link if user is admin
+    if (userData.isAdmin) {
+      const adminLink = document.getElementById('adminLink');
+      if (adminLink) adminLink.style.display = '';
+    }
   }
 
   // Section switching

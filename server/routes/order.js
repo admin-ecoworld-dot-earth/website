@@ -1,6 +1,7 @@
 const express = require('express');
 const Order = require('../models/Order');
 const auth = require('../middleware/auth');
+const { sendOrderStatusUpdate } = require('../utils/email');
 const router = express.Router();
 
 // GET /api/orders/track/:orderId
@@ -65,6 +66,32 @@ router.get('/phone/:phone', async (req, res) => {
   }
 });
 
+// GET /api/orders/admin/all
+// Admin — Get all orders with filters
+router.get('/admin/all', auth, async (req, res) => {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
+  try {
+    const { status, payment, page = 1, limit = 50 } = req.query;
+    const filter = {};
+    if (status) filter.orderStatus = status;
+    if (payment) filter.paymentStatus = payment;
+
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await Order.countDocuments(filter);
+
+    res.json({ success: true, orders, total, page: parseInt(page), totalPages: Math.ceil(total / limit) });
+  } catch (error) {
+    console.error('Admin fetch orders error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching orders' });
+  }
+});
+
 // PATCH /api/orders/:orderId/status
 // Admin — Update order status (protected with auth + admin check)
 router.patch('/:orderId/status', auth, async (req, res) => {
@@ -96,6 +123,11 @@ router.patch('/:orderId/status', auth, async (req, res) => {
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Send status update email to customer
+    if (status !== 'placed') {
+      sendOrderStatusUpdate(order, status, note);
     }
 
     res.json({ success: true, order });
