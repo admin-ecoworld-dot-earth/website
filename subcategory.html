@@ -20,6 +20,12 @@
     background: #e8f5e9; color: #2e7d32; padding: 0.15rem 0.5rem;
     border-radius: 4px; font-size: 0.7rem; font-weight: 500;
   }
+  .card-image { position: relative; }
+  .card-image .badge {
+    position: absolute; top: 0.5rem; right: 0.5rem;
+    background: #2e7d32; color: #fff; padding: 0.2rem 0.6rem;
+    border-radius: 4px; font-size: 0.7rem; font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -70,16 +76,60 @@
   const params = new URLSearchParams(window.location.search);
   const catId = params.get('cat');
   const subId = params.get('sub');
+  const subsubId = params.get('subsub');
   const category = getCategoryById(catId);
   const subcategory = getSubcategoryById(catId, subId);
 
   if (!category || !subcategory) {
     window.location.href = catId ? `category.html?cat=${catId}` : 'products.html';
-  } else {
-    // Update page title
+  } else if (subsubId) {
+    // --- Showing products of a sub-subcategory ---
+    const subsub = getSubSubcategoryById(catId, subId, subsubId);
+    if (!subsub) {
+      window.location.href = `subcategory.html?cat=${catId}&sub=${subId}`;
+    } else {
+      document.title = `${subsub.name} - EcoWorld.earth`;
+
+      document.getElementById('breadcrumb').innerHTML = `
+        <a href="index.html">Home</a><span class="sep">/</span>
+        <a href="products.html">Products</a><span class="sep">/</span>
+        <a href="category.html?cat=${catId}">${category.name}</a><span class="sep">/</span>
+        <a href="subcategory.html?cat=${catId}&sub=${subId}">${subcategory.name}</a><span class="sep">/</span>
+        <span>${subsub.name}</span>
+      `;
+
+      document.getElementById('pageHeader').innerHTML = `
+        <h1>${subsub.name}</h1>
+        <p>${subsub.description}</p>
+      `;
+
+      const grid = document.getElementById('productGrid');
+      subsub.products.forEach(product => {
+        grid.innerHTML += `
+          <a href="product-detail.html?id=${product.id}" class="card">
+            <div class="card-image">
+              ${product.image ? `<img src="${product.image}" alt="${product.name}">` : `<i class="${category.icon} placeholder-icon"></i>`}
+              ${product.badge ? `<span class="badge">${product.badge}</span>` : ''}
+            </div>
+            <div class="card-body">
+              <h3>${product.name}</h3>
+              <p>${product.description}</p>
+              <div class="product-card-price">${product.priceLabel}</div>
+              <div class="product-card-tags">
+                ${product.usage.slice(0, 4).map(u => `<span class="tag">${u}</span>`).join('')}
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="card-link">View Details <i class="fas fa-arrow-right"></i></span>
+            </div>
+          </a>
+        `;
+      });
+    }
+  } else if (subcategory.subcategories) {
+    // --- Subcategory has nested sub-subcategories (e.g., Carry Bags) ---
     document.title = `${subcategory.name} - EcoWorld.earth`;
 
-    // Breadcrumb
     document.getElementById('breadcrumb').innerHTML = `
       <a href="index.html">Home</a><span class="sep">/</span>
       <a href="products.html">Products</a><span class="sep">/</span>
@@ -87,13 +137,49 @@
       <span>${subcategory.name}</span>
     `;
 
-    // Page Header
+    document.getElementById('pageHeader').innerHTML = `
+      <h1>${subcategory.name}</h1>
+      <p>${subcategory.description}</p>
+      ${subcategory.tagline ? `<p style="color:#2e7d32;font-weight:600;margin-top:0.5rem;font-style:italic;">"${subcategory.tagline}"</p>` : ''}
+    `;
+
+    const grid = document.getElementById('productGrid');
+    subcategory.subcategories.forEach(subsub => {
+      const productCount = subsub.products ? subsub.products.length : 0;
+      grid.innerHTML += `
+        <a href="subcategory.html?cat=${catId}&sub=${subId}&subsub=${subsub.id}" class="card">
+          <div class="card-image">
+            ${subsub.image ? `<img src="${subsub.image}" alt="${subsub.name}">` : `<i class="${category.icon} placeholder-icon"></i>`}
+          </div>
+          <div class="card-body">
+            <h3>${subsub.name}</h3>
+            <p>${subsub.description}</p>
+            <div class="card-meta">
+              <span class="product-count">${productCount} product${productCount > 1 ? 's' : ''}</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="card-link">View Products <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </a>
+      `;
+    });
+  } else {
+    // --- Normal subcategory with products directly ---
+    document.title = `${subcategory.name} - EcoWorld.earth`;
+
+    document.getElementById('breadcrumb').innerHTML = `
+      <a href="index.html">Home</a><span class="sep">/</span>
+      <a href="products.html">Products</a><span class="sep">/</span>
+      <a href="category.html?cat=${catId}">${category.name}</a><span class="sep">/</span>
+      <span>${subcategory.name}</span>
+    `;
+
     document.getElementById('pageHeader').innerHTML = `
       <h1>${subcategory.name}</h1>
       <p>${subcategory.description}</p>
     `;
 
-    // Product cards
     const grid = document.getElementById('productGrid');
     subcategory.products.forEach(product => {
       const variantKeys = Object.keys(product.variants);
@@ -105,6 +191,7 @@
         <a href="product-detail.html?id=${product.id}" class="card">
           <div class="card-image">
             ${product.image ? `<img src="${product.image}" alt="${product.name}">` : `<i class="${category.icon} placeholder-icon"></i>`}
+            ${product.badge ? `<span class="badge">${product.badge}</span>` : ''}
           </div>
           <div class="card-body">
             <h3>${product.name}</h3>

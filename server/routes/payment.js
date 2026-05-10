@@ -19,11 +19,14 @@ const razorpay = new Razorpay({
 // Creates Razorpay order + stores pending order in DB
 router.post('/create-order', optionalAuth, validateOrder, async (req, res) => {
   try {
-    const { customer, items, paymentMethod } = req.body;
+    const { customer, items, paymentMethod, subtotal, gstTotal, transportTotal } = req.body;
     const userId = req.user ? req.user._id : null;
 
     // Calculate total on server (never trust frontend total)
-    const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const itemsTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const serverGst = items.reduce((sum, item) => sum + (item.gstAmount || 0), 0);
+    const serverTransport = transportTotal || 0;
+    const totalAmount = itemsTotal + serverGst + serverTransport;
 
     if (totalAmount <= 0) {
       return res.status(400).json({ success: false, message: 'Invalid order total' });
@@ -39,6 +42,9 @@ router.post('/create-order', optionalAuth, validateOrder, async (req, res) => {
         userId,
         customer,
         items,
+        subtotal: itemsTotal,
+        gstTotal: serverGst,
+        transportTotal: serverTransport,
         totalAmount,
         paymentMethod: 'cod',
         paymentStatus: 'pending',
@@ -75,6 +81,9 @@ router.post('/create-order', optionalAuth, validateOrder, async (req, res) => {
       userId,
       customer,
       items,
+      subtotal: itemsTotal,
+      gstTotal: serverGst,
+      transportTotal: serverTransport,
       totalAmount,
       paymentMethod: 'razorpay',
       razorpayOrderId: razorpayOrder.id,

@@ -6,7 +6,11 @@ const orderItemSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   quantity: { type: Number, required: true, min: 1 },
   variants: { type: Object, default: {} },
-  sellerId: { type: String, default: 'ecoworld' }
+  sellerId: { type: String, default: 'ecoworld' },
+  gstPercent: { type: Number, default: 0 },
+  gstAmount: { type: Number, default: 0 },
+  unitWeight: { type: Number, default: null },
+  unitLabel: { type: String, default: null }
 });
 
 const statusHistorySchema = new mongoose.Schema({
@@ -27,6 +31,9 @@ const orderSchema = new mongoose.Schema({
     pincode: { type: String, required: true }
   },
   items: [orderItemSchema],
+  subtotal: { type: Number, default: 0 },
+  gstTotal: { type: Number, default: 0 },
+  transportTotal: { type: Number, default: 0 },
   totalAmount: { type: Number, required: true },
   paymentMethod: { type: String, enum: ['razorpay', 'cod', 'upi_manual', 'bank_transfer'], required: true },
   paymentId: { type: String, default: '' },

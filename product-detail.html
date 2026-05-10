@@ -21,11 +21,12 @@
     overflow: hidden; position: sticky; top: 90px;
   }
   .product-main-image {
-    width: 100%; height: 350px;
+    width: 100%; max-height: 350px;
     background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
     display: flex; align-items: center; justify-content: center;
   }
-  .product-main-image img { width: 100%; height: 100%; object-fit: cover; }
+  .product-main-image:has(img) { background: #fff; }
+  .product-main-image img { width: 100%; height: 100%; max-height: 350px; object-fit: contain; }
   .product-main-image .placeholder-icon { font-size: 4rem; color: #a5d6a7; }
   .product-image-footer {
     padding: 1rem; text-align: center; font-size: 0.8rem; color: #999;
@@ -118,6 +119,19 @@
   }
   .moq-note i { margin-right: 0.4rem; }
 
+  /* Image Gallery Thumbnails */
+  .product-thumbnails {
+    display: flex; gap: 8px; padding: 10px 12px;
+    border-top: 1px solid #f0f0f0; overflow-x: auto;
+  }
+  .product-thumbnails img {
+    width: 60px; height: 60px; object-fit: cover;
+    border-radius: 6px; cursor: pointer; border: 2px solid transparent;
+    opacity: 0.6; transition: all 0.2s;
+  }
+  .product-thumbnails img:hover { opacity: 0.9; }
+  .product-thumbnails img.active { border-color: #2e7d32; opacity: 1; }
+
   /* Toast */
   .toast {
     position: fixed; bottom: 20px; right: 20px; z-index: 9999;
@@ -180,17 +194,27 @@
   if (!result) {
     window.location.href = 'products.html';
   } else {
-    const { product, subcategory, category } = result;
+    const { product, subcategory, category, parentSubcategory } = result;
     document.title = `${product.name} - EcoWorld.earth`;
 
     // Breadcrumb
-    document.getElementById('breadcrumb').innerHTML = `
+    let breadcrumbHtml = `
       <a href="index.html">Home</a><span class="sep">/</span>
       <a href="products.html">Products</a><span class="sep">/</span>
       <a href="category.html?cat=${category.id}">${category.name}</a><span class="sep">/</span>
-      <a href="subcategory.html?cat=${category.id}&sub=${subcategory.id}">${subcategory.name}</a><span class="sep">/</span>
-      <span>${product.name}</span>
     `;
+    if (parentSubcategory) {
+      breadcrumbHtml += `
+        <a href="subcategory.html?cat=${category.id}&sub=${parentSubcategory.id}">${parentSubcategory.name}</a><span class="sep">/</span>
+        <a href="subcategory.html?cat=${category.id}&sub=${parentSubcategory.id}&subsub=${subcategory.id}">${subcategory.name}</a><span class="sep">/</span>
+      `;
+    } else {
+      breadcrumbHtml += `
+        <a href="subcategory.html?cat=${category.id}&sub=${subcategory.id}">${subcategory.name}</a><span class="sep">/</span>
+      `;
+    }
+    breadcrumbHtml += `<span>${product.name}</span>`;
+    document.getElementById('breadcrumb').innerHTML = breadcrumbHtml;
 
     // Build variant selectors HTML
     const variantKeys = Object.keys(product.variants);
@@ -212,10 +236,15 @@
     document.getElementById('productDetail').innerHTML = `
       <div class="product-layout">
         <div class="product-image-section">
-          <div class="product-main-image">
+          <div class="product-main-image" id="mainImage">
             ${product.image ? `<img src="${product.image}" alt="${product.name}">` : `<i class="${category.icon} placeholder-icon"></i>`}
           </div>
-          <div class="product-image-footer">Image placeholder — actual product image coming soon</div>
+          ${product.images && product.images.length > 1 ? `
+            <div class="product-thumbnails">
+              ${product.images.map((img, i) => `<img src="${img}" alt="${product.name} ${i+1}" class="${i === 0 ? 'active' : ''}" onclick="switchImage(this, '${img}')">`).join('')}
+            </div>
+          ` : ''}
+          ${product.image ? '' : '<div class="product-image-footer">Image placeholder — actual product image coming soon</div>'}
         </div>
         <div class="product-info-section">
           <div class="product-seller"><i class="fas fa-check-circle"></i> Sold by ${STORE_CONFIG.defaultSeller.name}</div>
@@ -224,15 +253,37 @@
 
           <div class="product-price-box">
             <div class="price">${product.priceLabel}</div>
+            ${product.unitWeight ? `<div class="price-unit-info" style="font-size:0.85rem;color:#555;margin-top:0.3rem;">
+              <strong>1 unit = ${product.unitWeight} ${product.unitLabel || 'kg'}</strong> &nbsp;|&nbsp;
+              <strong>₹${(product.basePrice * product.unitWeight).toLocaleString('en-IN')} per unit</strong>
+              ${product.gstPercent ? ` <span style="color:#888;">(+ ${product.gstPercent}% GST)</span>` : ''}
+            </div>` : ''}
+            ${product.priceTable && product.gstPercent ? `<div style="font-size:0.85rem;color:#555;margin-top:0.3rem;">
+              <strong>1 unit = ${product.unitLabel || '1000 pcs'}</strong> &nbsp;|&nbsp;
+              <span style="color:#888;">+ ${product.gstPercent}% GST applicable</span>
+            </div>` : ''}
+            ${product.transportPerKg ? `<div style="font-size:0.82rem;color:#666;margin-top:0.3rem;">
+              <i class="fas fa-truck" style="color:#43a047;"></i> Transport: ₹${product.transportPerKg}/kg
+              &nbsp;|&nbsp; <strong style="color:#2e7d32;">FREE above ${product.freeTransportAboveKg} kg</strong>
+            </div>` : ''}
+            ${product.transportPerUnit ? `<div style="font-size:0.82rem;color:#666;margin-top:0.3rem;">
+              <i class="fas fa-truck" style="color:#43a047;"></i> Transport: ₹${product.transportPerUnit} per unit (${product.unitLabel || '1000 pcs'})
+              ${product.freeTransportAboveUnits ? ` &nbsp;|&nbsp; <strong style="color:#2e7d32;">FREE for ${product.freeTransportAboveUnits}+ units</strong>` : ''}
+            </div>` : ''}
             <div class="price-note">${product.bulkPricing ? 'Bulk pricing available on request' : ''}</div>
+            ${product.pricingNote ? `<div class="price-note" style="margin-top:0.4rem;font-size:0.8rem;color:#777;"><i class="fas fa-info-circle"></i> ${product.pricingNote}</div>` : ''}
           </div>
 
           <div class="variant-section">
             ${variantsHtml}
           </div>
 
+          ${product.piecesPerKg ? `<div id="piecesInfo" style="background:#e8f5e9;border-radius:8px;padding:0.7rem 1rem;margin-bottom:1rem;font-size:0.85rem;color:#2e7d32;display:none;">
+            <i class="fas fa-cubes"></i> <span id="piecesText"></span>
+          </div>` : ''}
+
           <div class="quantity-section">
-            <label>Quantity</label>
+            <label>Quantity (1 unit = ${product.priceTable && product.unitLabel ? product.unitLabel : product.priceTable ? '1000 pcs' : ((product.unitWeight || 1) + ' ' + (product.unitLabel || 'piece'))})</label>
             <div class="quantity-control">
               <button class="qty-btn" id="qtyMinus">−</button>
               <input type="number" class="qty-input" id="qtyInput" value="1" min="1" max="9999">
@@ -268,8 +319,58 @@
         // Deselect siblings
         btn.closest('.variant-options').querySelectorAll('.variant-option').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
+
+        // Show custom size input if "Customized Size" selected
+        const customInput = document.getElementById('customSizeInput');
+        if (customInput) {
+          const sizeGroup = document.querySelector('.variant-options[data-variant="size"]');
+          const selectedSize = sizeGroup ? sizeGroup.querySelector('.variant-option.selected') : null;
+          customInput.style.display = (selectedSize && selectedSize.dataset.value === 'Customized Size') ? 'block' : 'none';
+        }
+
+        // Update pieces per kg info
+        if (product.piecesPerKg && key === 'size') {
+          const piecesInfo = document.getElementById('piecesInfo');
+          const piecesText = document.getElementById('piecesText');
+          if (piecesInfo && piecesText) {
+            const sizeVal = btn.dataset.value;
+            const pcsPerKg = product.piecesPerKg[sizeVal];
+            if (pcsPerKg) {
+              const unitWt = product.unitWeight || 30;
+              const totalPcs = pcsPerKg * unitWt;
+              piecesInfo.style.display = 'block';
+              piecesText.innerHTML = `<strong>${sizeVal}</strong>: ~${pcsPerKg} pieces/kg &nbsp;|&nbsp; <strong>1 unit (${unitWt} kg) = ~${totalPcs.toLocaleString('en-IN')} pieces</strong>`;
+            } else {
+              piecesInfo.style.display = 'none';
+            }
+          }
+        }
+
+        // Update dynamic price from priceTable
+        if (product.priceTable) {
+          updatePriceFromTable(product);
+        }
       });
     });
+
+    // Add custom size input field after size variant group (if product has "Customized Size" option)
+    const sizeGroup = document.querySelector('.variant-options[data-variant="size"]');
+    if (sizeGroup) {
+      const hasCustom = Array.from(sizeGroup.querySelectorAll('.variant-option')).some(b => b.dataset.value === 'Customized Size');
+      if (hasCustom) {
+        const inputDiv = document.createElement('div');
+        inputDiv.id = 'customSizeInput';
+        inputDiv.style.display = 'none';
+        inputDiv.style.marginTop = '0.5rem';
+        inputDiv.innerHTML = `
+          <label style="font-size:0.85rem;font-weight:600;color:#333;">Enter Custom Size (e.g. 11×15 inch)</label>
+          <input type="text" id="customSizeValue" placeholder="Width × Height in inches" 
+            style="width:100%;padding:0.5rem 0.7rem;border:1px solid #c8e6c9;border-radius:6px;font-size:0.9rem;margin-top:0.3rem;outline:none;"
+            onfocus="this.style.borderColor='#43a047'" onblur="this.style.borderColor='#c8e6c9'">
+        `;
+        sizeGroup.parentElement.appendChild(inputDiv);
+      }
+    }
 
     // === QUANTITY LOGIC ===
     const qtyInput = document.getElementById('qtyInput');
@@ -294,8 +395,44 @@
         if (selected) selectedVariants[key] = selected.dataset.value;
       });
 
+      // If "Customized Size" selected, require custom size input
+      if (selectedVariants.size === 'Customized Size') {
+        const customVal = document.getElementById('customSizeValue');
+        if (customVal) {
+          const sizeText = customVal.value.trim();
+          if (!sizeText) {
+            alert('Please enter your custom size (e.g. 11×15 inch).');
+            customVal.focus();
+            return;
+          }
+          selectedVariants.size = 'Custom: ' + sizeText;
+        }
+      }
+
       const quantity = parseInt(qtyInput.value) || 1;
-      const price = product.basePrice || 0; // 0 means price on request
+
+      // Determine price based on product type
+      let price = 0;
+      if (product.priceTable) {
+        // Build lookup key from all selected variants joined by |
+        const tableKeys = Object.keys(product.variants || {});
+        const keyParts = tableKeys.map(k => selectedVariants[k] || '');
+        // Try multi-key first (e.g. "size|gsm"), then single-key
+        let key = keyParts.join('|');
+        price = product.priceTable[key] || 0;
+        if (price === 0 && keyParts.length === 1) {
+          price = product.priceTable[keyParts[0]] || 0;
+        }
+        if (price === 0) {
+          alert('Price not available for this combination. Please select all options.');
+          return;
+        }
+      } else if (product.unitWeight) {
+        // Weight-based products (biodegradable): price = basePrice * unitWeight per unit
+        price = product.basePrice * product.unitWeight;
+      } else {
+        price = product.basePrice || 0;
+      }
 
       addToCart(product.id, selectedVariants, quantity, price, product.sellerId);
       updateNavCartBadge();
@@ -312,11 +449,43 @@
     });
   }
 
+  function updatePriceFromTable(product) {
+    const selectedVariants = {};
+    document.querySelectorAll('.variant-options').forEach(group => {
+      const key = group.dataset.variant;
+      const selected = group.querySelector('.variant-option.selected');
+      if (selected) selectedVariants[key] = selected.dataset.value;
+    });
+    const tableKeys = Object.keys(product.variants || {});
+    const keyParts = tableKeys.map(k => selectedVariants[k] || '');
+    let key = keyParts.join('|');
+    let price = product.priceTable[key] || 0;
+    if (price === 0 && keyParts.length === 1) {
+      price = product.priceTable[keyParts[0]] || 0;
+    }
+    const priceEl = document.querySelector('.product-price-box .price');
+    if (priceEl) {
+      if (price) {
+        const label = product.priceUnit || '';
+        const detail = keyParts.filter(v => v).join(', ');
+        priceEl.innerHTML = `₹${price.toLocaleString('en-IN')} ${label} <span style="font-size:0.7em;color:#888;">(${detail})</span>`;
+      } else {
+        priceEl.innerHTML = `${product.priceLabel} <span style="font-size:0.7em;color:#e65100;">— select options for exact price</span>`;
+      }
+    }
+  }
+
   function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  function switchImage(thumb, src) {
+    document.querySelector('#mainImage img').src = src;
+    document.querySelectorAll('.product-thumbnails img').forEach(t => t.classList.remove('active'));
+    thumb.classList.add('active');
   }
 
   updateNavCartBadge();

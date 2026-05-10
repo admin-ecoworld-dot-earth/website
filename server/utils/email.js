@@ -24,17 +24,24 @@ async function sendOrderConfirmation(order) {
   const orderDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const orderTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-  const itemRows = order.items.map((item, i) =>
-    `<tr>
+  const itemRows = order.items.map((item, i) => {
+    const lineTotal = item.price * item.quantity;
+    const gstPct = item.gstPercent || 0;
+    const gstAmt = item.gstAmount || Math.round(lineTotal * gstPct / 100);
+    const variantStr = item.variants ? Object.entries(item.variants).map(([k, v]) => v).join(', ') : '';
+    return `<tr>
       <td style="padding:8px;border:1px solid #ddd;text-align:center;">${i + 1}</td>
-      <td style="padding:8px;border:1px solid #ddd;">${item.name}${item.variants ? ' - ' + Object.values(item.variants).join(', ') : ''}</td>
+      <td style="padding:8px;border:1px solid #ddd;">${item.name}${variantStr ? ' - ' + variantStr : ''}</td>
       <td style="padding:8px;border:1px solid #ddd;text-align:center;">${item.quantity}</td>
       <td style="padding:8px;border:1px solid #ddd;text-align:right;">₹${item.price.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-      <td style="padding:8px;border:1px solid #ddd;text-align:right;">₹${(item.price * item.quantity).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-    </tr>`
-  ).join('');
+      <td style="padding:8px;border:1px solid #ddd;text-align:right;">₹${lineTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+    </tr>`;
+  }).join('');
 
   const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = order.subtotal || order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const gstTotal = order.gstTotal || 0;
+  const transportTotal = order.transportTotal || 0;
 
   const html = `
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:700px;margin:0 auto;background:#fff;">
@@ -109,11 +116,24 @@ async function sendOrderConfirmation(order) {
               </thead>
               <tbody>
                 ${itemRows}
-                <tr style="background:#f9f9f9;font-weight:700;">
-                  <td style="padding:8px;border:1px solid #ddd;"></td>
-                  <td style="padding:8px;border:1px solid #ddd;">Total</td>
-                  <td style="padding:8px;border:1px solid #ddd;text-align:center;">${totalQty}</td>
-                  <td style="padding:8px;border:1px solid #ddd;"></td>
+                <tr style="background:#f9f9f9;">
+                  <td style="padding:8px;border:1px solid #ddd;" colspan="3"></td>
+                  <td style="padding:8px;border:1px solid #ddd;text-align:right;font-weight:600;">Subtotal</td>
+                  <td style="padding:8px;border:1px solid #ddd;text-align:right;">₹${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                </tr>
+                ${gstTotal > 0 ? `<tr style="background:#f9f9f9;">
+                  <td style="padding:8px;border:1px solid #ddd;" colspan="3"></td>
+                  <td style="padding:8px;border:1px solid #ddd;text-align:right;font-weight:600;">GST (18%)</td>
+                  <td style="padding:8px;border:1px solid #ddd;text-align:right;">₹${gstTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                </tr>` : ''}
+                ${transportTotal > 0 ? `<tr style="background:#f9f9f9;">
+                  <td style="padding:8px;border:1px solid #ddd;" colspan="3"></td>
+                  <td style="padding:8px;border:1px solid #ddd;text-align:right;font-weight:600;">Transport / Shipping</td>
+                  <td style="padding:8px;border:1px solid #ddd;text-align:right;">₹${transportTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                </tr>` : ''}
+                <tr style="background:#e8f5e9;font-weight:700;">
+                  <td style="padding:8px;border:1px solid #ddd;" colspan="3"></td>
+                  <td style="padding:8px;border:1px solid #ddd;text-align:right;font-size:14px;">Grand Total</td>
                   <td style="padding:8px;border:1px solid #ddd;text-align:right;font-size:15px;color:#1b5e20;">₹${order.totalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                 </tr>
               </tbody>
