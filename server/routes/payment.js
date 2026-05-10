@@ -21,7 +21,6 @@ router.post('/create-order', auth, validateOrder, async (req, res) => {
   try {
     const { customer, items, paymentMethod, subtotal, gstTotal, transportTotal } = req.body;
     const userId = req.user._id;
-
     // Calculate total on server (never trust frontend total)
     const itemsTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const serverGst = items.reduce((sum, item) => sum + (item.gstAmount || 0), 0);
